@@ -74,7 +74,7 @@ export default function App() {
       let v = parseFloat(minMl.toFixed(1));
       while (v <= maxMl + 0.05) {
         opts.push(parseFloat(v.toFixed(1)));
-        v = parseFloat((v + 0.5).toFixed(1));
+        v = parseFloat((v + 1).toFixed(1));
       }
       const unitVol = result.dispensingUnit?.volumeMl ?? 5;
       return opts.length > 1
@@ -254,7 +254,7 @@ export default function App() {
                   >
                     {doseOptions.map((opt) => (
                       <option key={opt.mg} value={opt.mg}>
-                        {opt.clean ? "✓ " : ""}{formatMg(opt.mg)} mg
+                        {formatMg(opt.mg)} mg {opt.clean ? "✓" : ""}
                       </option>
                     ))}
                   </select>
