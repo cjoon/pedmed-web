@@ -63,37 +63,23 @@ export default function App() {
   const showTablets = result?.tabletMg != null;
   const showLiquid = result?.volumeMl != null;
 
-  // Build dose options in 0.5 mL steps from 0.5 mL to maxMl
+  // Build dose options in 1 mg steps from minDoseMg to maxDoseMg
   function getDoseOptions() {
-    if (!result) return null;
-    if (showLiquid && result.minDoseMg) {
-      const maxMl = Math.floor(result.volumeMl * 2) / 2; // round down to nearest 0.5
-      if (maxMl < 0.5) return null;
-      const unitVol = result.dispensingUnit?.volumeMl ?? 5;
-      const opts = [];
-      for (let i = 1; i * 0.5 <= maxMl; i++) {
-        const v = i * 0.5;
-        const isWholeML = v % 1 === 0;
-        const isWholeTsp = Math.abs(v / unitVol - Math.round(v / unitVol)) < 0.001;
-        opts.push({
-          mg: parseFloat((v * result.concentration).toFixed(1)),
-          ml: v,
-          clean: isWholeML || isWholeTsp,
-        });
-      }
-      return opts.length > 1 ? opts : null;
+    if (!result || !result.minDoseMg) return null;
+    const minMg = Math.ceil(result.minDoseMg);
+    const maxMg = Math.floor(result.doseMg);
+    if (maxMg <= minMg) return null;
+    const unitVol = result.dispensingUnit?.volumeMl ?? 5;
+    const opts = [];
+    for (let mg = minMg; mg <= maxMg; mg++) {
+      const ml = mg / result.concentration;
+      const isWholeMl = Math.abs(ml - Math.round(ml)) < 0.001;
+      const isWholeTsp = Math.abs(ml / unitVol - Math.round(ml / unitVol)) < 0.001;
+      opts.push({ mg, ml, clean: isWholeMl || isWholeTsp });
     }
+    return opts.length > 1 ? opts : null;
+  }
     if (showTablets && result.minDoseMg && result.tabletMg) {
-      const minTabs = Math.ceil(result.minDoseMg / result.tabletMg);
-      const maxTabs = Math.floor(result.doseMg / result.tabletMg);
-      if (maxTabs <= minTabs) return null;
-      const opts = [];
-      for (let t = minTabs; t <= maxTabs; t++) {
-        opts.push({ mg: t * result.tabletMg, tabs: t });
-      }
-      return opts.length > 1 ? opts : null;
-    }
-    return null;
   }
 
   const doseOptions = getDoseOptions();
