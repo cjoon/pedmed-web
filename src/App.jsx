@@ -63,19 +63,22 @@ export default function App() {
   const showTablets = result?.tabletMg != null;
   const showLiquid = result?.volumeMl != null;
 
-  // Build dose options in 1 mL whole-number steps from 1 mL to maxMl
+  // Build dose options in 0.5 mL steps from 0.5 mL to maxMl
   function getDoseOptions() {
     if (!result) return null;
     if (showLiquid && result.minDoseMg) {
-      const maxMl = Math.floor(result.volumeMl);
-      if (maxMl < 1) return null;
+      const maxMl = Math.floor(result.volumeMl * 2) / 2; // round down to nearest 0.5
+      if (maxMl < 0.5) return null;
       const unitVol = result.dispensingUnit?.volumeMl ?? 5;
       const opts = [];
-      for (let v = 1; v <= maxMl; v++) {
+      for (let i = 1; i * 0.5 <= maxMl; i++) {
+        const v = i * 0.5;
+        const isWholeML = v % 1 === 0;
+        const isWholeTsp = Math.abs(v / unitVol - Math.round(v / unitVol)) < 0.001;
         opts.push({
           mg: parseFloat((v * result.concentration).toFixed(1)),
           ml: v,
-          clean: Math.abs(v / unitVol - Math.round(v / unitVol)) < 0.001,
+          clean: isWholeML || isWholeTsp,
         });
       }
       return opts.length > 1 ? opts : null;
