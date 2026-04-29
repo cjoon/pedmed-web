@@ -107,6 +107,16 @@ body {
   border-color: var(--accent);
 }
 
+/* Hide number input spinners */
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinner[type=number] {
+  -moz-appearance: textfield;
+}
+
 .unit-toggle {
   display: flex;
   border: 1.5px solid var(--border);
@@ -288,6 +298,22 @@ body {
 .result-row.highlight .result-value {
   font-size: 20px;
   color: var(--accent);
+}
+
+.dose-select {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+}
+
+.dose-select:focus {
+  border-color: var(--accent);
 }
 
 /* ── Warnings ── */

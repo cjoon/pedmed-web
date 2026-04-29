@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { medications } from "./medications";
 import {
   calculateDose,
   getEffectiveRegimen,
   lbsToKg,
+  isCleanVolume,
   formatMl,
   formatMg,
   formatTablets,
@@ -19,6 +20,7 @@ export default function App() {
   const [selectedFormulation, setSelectedFormulation] = useState(null);
   const [selectedRegimen, setSelectedRegimen] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedDoseMg, setSelectedDoseMg] = useState(null);
 
   function handleAccept() {
     localStorage.setItem("disclaimerAccepted", "true");
@@ -30,6 +32,7 @@ export default function App() {
     setSelectedFormulation(null);
     setSelectedRegimen(null);
     setSelectedDay(null);
+    setSelectedDoseMg(null);
   }
 
   function handleFormulationChange(e) {
@@ -37,11 +40,15 @@ export default function App() {
     const f = selectedMed.formulationOptions?.[idx] ?? null;
     setSelectedFormulation(isNaN(idx) ? null : f);
     setSelectedRegimen(null);
+    setSelectedDoseMg(null);
   }
 
   const weightKg =
     weightInput === "" ? null : unit === "kg" ? parseFloat(weightInput) : lbsToKg(parseFloat(weightInput));
   const weightKgDisplay = weightKg != null && !isNaN(weightKg) && weightKg > 0 ? weightKg : null;
+
+  // Reset selected dose when weight changes
+  useEffect(() => { setSelectedDoseMg(null); }, [weightKgDisplay, selectedDay, selectedRegimen]);
 
   const effectiveRegimen =
     selectedMed?.dosingRegimens
@@ -56,21 +63,52 @@ export default function App() {
   const showTablets = result?.tabletMg != null;
   const showLiquid = result?.volumeMl != null;
 
-  function getMlOptions() {
-    if (!result || !showLiquid || !result.minDoseMg) return null;
-    const minMl = result.minDoseMg / result.concentration;
-    const maxMl = result.volumeMl;
-    if (maxMl <= minMl + 0.05) return null;
-    const opts = [];
-    let v = parseFloat(minMl.toFixed(1));
-    while (v <= maxMl + 0.05) {
-      opts.push(parseFloat(v.toFixed(1)));
-      v = parseFloat((v + 0.5).toFixed(1));
+  // Build dose options in 0.5 mL steps between min and max
+  function getDoseOptions() {
+    if (!result) return null;
+    if (showLiquid && result.minDoseMg) {
+      const minMl = result.minDoseMg / result.concentration;
+      const maxMl = result.volumeMl;
+      if (maxMl <= minMl + 0.05) return null;
+      const opts = [];
+      let v = parseFloat(minMl.toFixed(1));
+      while (v <= maxMl + 0.05) {
+        opts.push(parseFloat(v.toFixed(1)));
+        v = parseFloat((v + 0.5).toFixed(1));
+      }
+      const unitVol = result.dispensingUnit?.volumeMl ?? 5;
+      return opts.length > 1
+        ? opts.map((ml) => ({
+            mg: parseFloat((ml * result.concentration).toFixed(1)),
+            ml,
+            clean: isCleanVolume(ml, unitVol),
+          }))
+        : null;
     }
-    return opts.length > 1 ? opts : null;
+    if (showTablets && result.minDoseMg && result.tabletMg) {
+      const minTabs = Math.ceil(result.minDoseMg / result.tabletMg);
+      const maxTabs = Math.floor(result.doseMg / result.tabletMg);
+      if (maxTabs <= minTabs) return null;
+      const opts = [];
+      for (let t = minTabs; t <= maxTabs; t++) {
+        opts.push({ mg: t * result.tabletMg, tabs: t });
+      }
+      return opts.length > 1 ? opts : null;
+    }
+    return null;
   }
 
-  const mlOptions = getMlOptions();
+  const doseOptions = getDoseOptions();
+
+  // Active dose: user selection, or last (max) option, or calculated max
+  const defaultDoseMg = doseOptions ? doseOptions[doseOptions.length - 1].mg : result?.doseMg ?? null;
+  const activeDoseMg = selectedDoseMg ?? defaultDoseMg;
+  const activeVolumeMl = showLiquid && activeDoseMg && result
+    ? activeDoseMg / result.concentration
+    : result?.volumeMl ?? null;
+  const activeTablets = showTablets && activeDoseMg && result?.tabletMg
+    ? activeDoseMg / result.tabletMg
+    : result?.tablets ?? null;
 
   if (!accepted) return <Disclaimer onAccept={handleAccept} />;
 
@@ -87,7 +125,7 @@ export default function App() {
           <h2 className="section-title">Patient Weight</h2>
           <div className="weight-row">
             <input
-              className="weight-input"
+              className="weight-input no-spinner"
               type="number"
               min="0"
               step="0.1"
@@ -205,19 +243,37 @@ export default function App() {
             )}
 
             <div className="results-table">
-              <ResultRow label="Per dose" value={`${formatMg(result.doseMg)} mg`} highlight />
+              {/* Per dose — dropdown if range exists, static otherwise */}
+              <div className="result-row highlight">
+                <span className="result-label">Per dose</span>
+                {doseOptions ? (
+                  <select
+                    className="dose-select"
+                    value={activeDoseMg ?? result.doseMg}
+                    onChange={(e) => setSelectedDoseMg(parseFloat(e.target.value))}
+                  >
+                    {doseOptions.map((opt) => (
+                      <option key={opt.mg} value={opt.mg}>
+                        {opt.clean ? "✓ " : ""}{formatMg(opt.mg)} mg
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="result-value">{formatMg(activeDoseMg)} mg</span>
+                )}
+              </div>
 
               {showTablets && (
-                <ResultRow label="Tablets" value={`${formatTablets(result.tablets)} tab`} />
+                <ResultRow label="Tablets" value={`${formatTablets(activeTablets)} tab`} />
               )}
 
               {showLiquid && (
                 <>
-                  <ResultRow label="Volume" value={`${formatMl(result.volumeMl)} mL`} />
+                  <ResultRow label="Volume" value={`${formatMl(activeVolumeMl)} mL`} />
                   {result.dispensingUnit && (
                     <ResultRow
                       label={result.dispensingUnit.volumeMl === 1.7 ? "Carpules" : "Teaspoons"}
-                      value={`${formatMl(result.volumeMl / result.dispensingUnit.volumeMl)} ${
+                      value={`${formatMl(activeVolumeMl / result.dispensingUnit.volumeMl)} ${
                         result.dispensingUnit.volumeMl === 1.7 ? "Carpule" : "tsp"
                       }`}
                     />
@@ -228,7 +284,7 @@ export default function App() {
               {result.dosesPerDay > 1 && (
                 <ResultRow
                   label="Per day total"
-                  value={`${formatMg(result.doseMg * result.dosesPerDay)} mg`}
+                  value={`${formatMg(activeDoseMg * result.dosesPerDay)} mg`}
                 />
               )}
 
@@ -251,12 +307,6 @@ export default function App() {
               {result.adult && selectedMed?.adultNote && (
                 <p className="warning-text info">ℹ {selectedMed.adultNote}</p>
               )}
-              {mlOptions && (
-                <p className="warning-text info">
-                  ℹ Dose range: {formatMg(result.minDoseMg)}–{formatMg(result.doseMg)} mg
-                  ({formatMl(result.minDoseMg / result.concentration)}–{formatMl(result.volumeMl)} mL)
-                </p>
-              )}
             </div>
 
             <div className="result-disclaimer">
@@ -274,9 +324,9 @@ export default function App() {
   );
 }
 
-function ResultRow({ label, value, highlight }) {
+function ResultRow({ label, value }) {
   return (
-    <div className={`result-row${highlight ? " highlight" : ""}`}>
+    <div className="result-row">
       <span className="result-label">{label}</span>
       <span className="result-value">{value}</span>
     </div>
