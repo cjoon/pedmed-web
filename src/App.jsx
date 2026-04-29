@@ -63,27 +63,22 @@ export default function App() {
   const showTablets = result?.tabletMg != null;
   const showLiquid = result?.volumeMl != null;
 
-  // Build dose options in 0.5 mL steps between min and max
+  // Build dose options in 1 mL whole-number steps from 1 mL to maxMl
   function getDoseOptions() {
     if (!result) return null;
     if (showLiquid && result.minDoseMg) {
-      const minMl = result.minDoseMg / result.concentration;
-      const maxMl = result.volumeMl;
-      if (maxMl <= minMl + 0.05) return null;
-      const opts = [];
-      let v = parseFloat(minMl.toFixed(1));
-      while (v <= maxMl + 0.05) {
-        opts.push(parseFloat(v.toFixed(1)));
-        v = parseFloat((v + 1).toFixed(1));
-      }
+      const maxMl = Math.floor(result.volumeMl);
+      if (maxMl < 1) return null;
       const unitVol = result.dispensingUnit?.volumeMl ?? 5;
-      return opts.length > 1
-        ? opts.map((ml) => ({
-            mg: parseFloat((ml * result.concentration).toFixed(1)),
-            ml,
-            clean: isCleanVolume(ml, unitVol),
-          }))
-        : null;
+      const opts = [];
+      for (let v = 1; v <= maxMl; v++) {
+        opts.push({
+          mg: parseFloat((v * result.concentration).toFixed(1)),
+          ml: v,
+          clean: Math.abs(v / unitVol - Math.round(v / unitVol)) < 0.001,
+        });
+      }
+      return opts.length > 1 ? opts : null;
     }
     if (showTablets && result.minDoseMg && result.tabletMg) {
       const minTabs = Math.ceil(result.minDoseMg / result.tabletMg);
