@@ -124,7 +124,7 @@ export function formatMl(ml) {
 
 export function formatMg(mg) {
   if (mg == null) return null;
-  return mg % 1 === 0 ? mg.toFixed(0) : mg.toFixed(1);
+  return Math.floor(mg).toString();
 }
 
 export function formatTablets(t) {
