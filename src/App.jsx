@@ -79,8 +79,6 @@ export default function App() {
     }
     return opts.length > 1 ? opts : null;
   }
-    if (showTablets && result.minDoseMg && result.tabletMg) {
-  }
 
   const doseOptions = getDoseOptions();
 

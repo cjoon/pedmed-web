@@ -129,5 +129,6 @@ export function formatMg(mg) {
 
 export function formatTablets(t) {
   if (t == null) return null;
+  if (t > 0 && t < 1) return parseFloat(t.toFixed(2)).toString();
   return t % 1 === 0 ? t.toFixed(0) : t.toFixed(2);
 }
