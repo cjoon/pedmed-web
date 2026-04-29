@@ -15,7 +15,7 @@ import "./App.css";
 export default function App() {
   const [accepted, setAccepted] = useState(() => localStorage.getItem("disclaimerAccepted") === "true");
   const [weightInput, setWeightInput] = useState("");
-  const [unit, setUnit] = useState("kg");
+  const [unit, setUnit] = useState("lbs");
   const [selectedMed, setSelectedMed] = useState(null);
   const [selectedFormulation, setSelectedFormulation] = useState(null);
   const [selectedRegimen, setSelectedRegimen] = useState(null);
@@ -256,7 +256,7 @@ export default function App() {
                   <ResultRow label="Volume" value={`${formatMl(activeVolumeMl)} mL`} />
                   {result.dispensingUnit && (
                     <ResultRow
-                      label={result.dispensingUnit.volumeMl === 1.7 ? "Carpules" : "Teaspoons"}
+                      label={result.dispensingUnit.volumeMl === 1.7 ? "Carpules (1.7 mL)" : "Teaspoons"}
                       value={`${formatMl(activeVolumeMl / result.dispensingUnit.volumeMl)} ${
                         result.dispensingUnit.volumeMl === 1.7 ? "Carpule" : "tsp"
                       }`}
