@@ -285,7 +285,9 @@ export default function App() {
               {result.maxTabletsPerDay != null && (
                 <p className="warning-text">⚠ Max {result.maxTabletsPerDay} tablets per 24 hours</p>
               )}
-              {selectedMed?.warning && <p className="warning-text">⚠ {selectedMed.warning}</p>}
+              {selectedMed?.warning && result.maxDosesPerDay == null && (
+                <p className="warning-text">⚠ {selectedMed.warning}</p>
+              )}
               {result.adult && selectedMed?.adultNote && (
                 <p className="warning-text info">ℹ {selectedMed.adultNote}</p>
               )}

@@ -67,6 +67,8 @@ export const medications = [
         maxSingleDoseMg: 500,
         maxDosePerKgPerDay: 40,
         dosesPerDay: 3,
+        adultDoseMg: 500,
+        adultMinDoseMg: 250,
       },
       {
         id: "high",
@@ -77,6 +79,8 @@ export const medications = [
         maxSingleDoseMg: 875,
         maxDosePerKgPerDay: 45,
         dosesPerDay: 2,
+        adultDoseMg: 875,
+        adultMinDoseMg: 500,
       },
     ],
   },

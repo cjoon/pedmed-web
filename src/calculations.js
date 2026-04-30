@@ -40,10 +40,13 @@ export function calculateDose(medication, weightKg, selectedFormulation, selecte
   if (adult) {
     if (dayDose) {
       doseMg = dayDose.maxMg ?? doseMg;
-    } else if (medication.adultDoseMg) {
-      doseMg = medication.adultDoseMg;
-    } else if (selectedFormulation?.tabletMg && selectedFormulation?.maxTablets) {
-      doseMg = selectedFormulation.tabletMg * selectedFormulation.maxTablets;
+    } else {
+      const adultMax = regimen?.adultDoseMg ?? medication.adultDoseMg;
+      if (adultMax) {
+        doseMg = adultMax;
+      } else if (selectedFormulation?.tabletMg && selectedFormulation?.maxTablets) {
+        doseMg = selectedFormulation.tabletMg * selectedFormulation.maxTablets;
+      }
     }
   } else {
     // Pediatric: tablet max cap
@@ -79,9 +82,11 @@ export function calculateDose(medication, weightKg, selectedFormulation, selecte
   const volumeMl = tabletMg ? null : doseMg / concentration;
   const tablets = tabletMg ? doseMg / tabletMg : null;
 
-  // Min dose range (for liquid picker)
+  // Min dose range (for liquid/dose picker)
   const minDosePerKg = regimen?.minDosePerKg ?? medication.minDosePerKg;
-  const minDoseMg = minDosePerKg && !adult ? Math.ceil(weightKg * minDosePerKg) : null;
+  const minDoseMg = adult
+    ? (regimen?.adultMinDoseMg ?? medication.adultMinDoseMg ?? null)
+    : (minDosePerKg ? Math.ceil(weightKg * minDosePerKg) : null);
 
   // Daily dose info
   const dosesPerDay = regimen?.dosesPerDay ?? medication.dosesPerDay ?? 1;
