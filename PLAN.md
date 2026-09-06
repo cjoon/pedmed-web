@@ -1,131 +1,199 @@
-# PedMed — Project Overview & Merge Plan
+# PLAN — ChartRx 통합 (SOAP 차팅 + 소아 약물 용량 계산기)
 
-## What This Project Is
+## Context
 
-**PedMed** is a pediatric medication dosage calculator built for clinical/dental reference. It calculates weight-based dosing for common pediatric medications, handles adult weight cutoffs, multiple formulations, and dosing regimens.
+pedcalc-med(소아 약물 용량 계산기, React 19 + Vite, GitHub Pages 배포 중)에
+`dental-charting.html` 프로토타입(`~/projects/charting-template/`, 읽기 전용 참조)의
+SOAP 차팅 템플릿 기능을 합쳐 하나의 앱(ChartRx)으로 만든다.
+프로토타입은 단일 HTML에 기능이 누적되다 붕괴한 전력이 있으므로, 릴리스를 작게 나누고
+각 단계마다 진료실 실사용 검증과 Codex 리뷰를 거친다.
 
-Deployed via GitHub Pages at base path `/pedcalc-web/`.
-
----
-
-## Tech Stack
-
-| Layer | Choice |
-|---|---|
-| Framework | React 19 (JSX) |
-| Build | Vite 8 |
-| Styling | Plain CSS (`App.css`, `index.css`) |
-| State | React `useState` / `useEffect` (no external store) |
-| Persistence | `localStorage` (disclaimer acceptance only) |
-| Deploy | GitHub Pages (static build in `/dist`) |
+**결정 사항 (2026-09-05, CJ 확정):**
+- 코드 위치: 이 repo(pedcalc-med) 안에서 확장. 새 repo(chartrx) 사용 안 함
+- 스택: 기존 그대로 — React JS/JSX + plain CSS + React state/localStorage
+  (TypeScript·Tailwind·Zustand·dnd-kit 도입 안 함, v1.1 이후 재검토)
+- 이번 라운드 범위: MVP = Initial Chart + Dosage 탭
 
 ---
 
-## File Structure
+## 조사 결과 (확정 사실)
 
+- `.github/workflows/deploy.yml`: **`main` push → GitHub Pages 자동 배포.** 작업은
+  `feat/chart-templates` 브랜치에서, main 머지는 CJ 승인 후에만.
+- `vite.config.js` base `/pedcalc-web/` 유지.
+- `src/calculations.js`, `src/medications.js`: 의존성 없는 순수 모듈. 수정 없이 재사용.
+- `dental-charting.html` (1,572줄, sha1 `8873824…`, 로컬 사본과 업로드본 바이트 동일):
+  - L605 `OPTIONS`(88개 placeholder), L606 `DEFAULT_OPTIONS`, L607 `PH_LABELS`
+  - L610 `FACTORY_TEMPLATES`: 5 카테고리 24 procedure, `versions[]{id,label,S,O,A,P[]}`
+  - L1318 `VN_TEMPLATES`, L1320 `VN_OPTIONS` (v1.1에서 사용 — **토큰 있음**, free-text 아님)
+  - 토큰 규칙: `{ph}` = 드롭다운 토큰. `#{tooth}`는 `#`이 리터럴, 값은 번호만.
+  - tooth 동기화(L701 `setFieldValue`): 값 입력 시 **비어 있는** tooth 토큰만 채움 → 개별 수정 가능.
+  - 드롭다운(L708): 옵션 목록 + Custom 입력, ↑↓/Enter/Esc, 화면 밖이면 위로 뒤집힘.
+  - 복사 포맷(L913 `getPlainChart`): 제목 + `=` 밑줄, `S: …` 한 줄, `P:`는 `  - step` 목록,
+    미입력 토큰은 `[ph]`.
+  - Visit 복사 포맷(L1464 `getVnPlainText`, v1.1용): 제목+날짜 헤더, `Outcome:`/`Next:` 포함.
+  - localStorage key `chartrx_v2` = `{options, templates}`.
+  - Reset(L884)은 같은 procedure를 다시 렌더해 값 초기화. Copy는 `navigator.clipboard.writeText` + toast.
+  - 빈 상태/힌트 문구는 프로토타입 원문 그대로 사용 (예: "Pick a procedure to begin").
+  - Settings(L1125–1128, v1.2용): Export/Import JSON, Reset ALL(confirm), 버전별 factory reset(confirm).
+  - **모바일은 DOM 복제 구조**(`syncMobChart`)라 React로 그대로 이식하지 않는다. 하나의 상태를
+    두 레이아웃(데스크톱/모바일)이 렌더하는 구조로 재설계.
+  - **Tab 키 이동은 프로토타입에 없다** — v2 기획서의 요구사항이므로 신규 구현.
+  - **CDT 코드·carpule→mg 환산 데이터는 HTML에 없음** — 아래 "데이터 결정" 참조.
+
+---
+
+## 아키텍처 (MVP)
+
+### 네비게이션
+```
+Desktop: Topbar 탭  [ Initial Chart ] [ Dosage ]     (Visit Notes는 v1.1)
+         Chart 모드에서만 좌측 Sidebar(290px) 렌더
+Mobile (≤700px): 하단 탭바 [ Chart ] [ Dosage ]
+         Chart: procedure 패널(전체화면) ↔ 차트 뷰(전체화면, 뒤로가기)
+```
+mode 상태: `'chart' | 'dosage'` (`App.jsx` useState, 기본값 `'chart'`).
+
+### 두 기능의 접점: 체중 공유
+`weightKg`를 `App.jsx`로 끌어올려 Dosage 탭과 Chart의 마취 환산 행이 공유한다.
+체중은 세션 한정(persist 안 함) — PHI 금지 원칙과 일관.
+
+### 디렉토리
 ```
 src/
-  medications.js     — medication data (doses, formulations, regimens)
-  calculations.js    — pure dose math (no React, fully testable)
-  App.jsx            — single-page UI
-  App.css            — all component styles
-  Disclaimer.jsx     — one-time disclaimer gate
-  index.css          — global/reset styles
-  main.jsx           — React root mount
-public/
-  favicon.svg
-  icons.svg
+  App.jsx                    ← 셸: mode 전환, weightKg 소유, Topbar/MobileNav
+  App.css                    ← 셸 + 공통 스타일 (ChartRx 팔레트)
+  index.css / main.jsx
+  calculations.js            ← 그대로
+  medications.js             ← 그대로
+  dosage/
+    DosageCalculator.jsx     ← 현재 App.jsx 본문 이동 (weightKg는 prop)
+    dosage.css               ← `.app`→`.dosage`, `.main`→`.dosage-main`만 개명
+  chart/
+    data/
+      initialTemplates.js    ← FACTORY_TEMPLATES 그대로 (VERBATIM)
+      dropdownOptions.js     ← OPTIONS, PH_LABELS 그대로
+      cdtCodes.js            ← procedure key → CDT 코드 배열 (CJ 제공)
+      anesthetics.js         ← 마취제 스펙
+    useChartData.js          ← storage 있으면 그것, 없으면 factory. v1.2 Settings 연결점
+    storage.js                ← load/save `chartrx_v2`
+    serializer.js              ← 차트 상태 → plain text (프로토타입 포맷 + CDT 줄)
+    anesthesia.js              ← carpule 수 → mg 환산, 체중 대비 max (순수 함수)
+    ChartView.jsx / Sidebar.jsx / ChartCard.jsx / SoapRow.jsx
+    FieldToken.jsx / FieldDropdown.jsx / ToothSelector.jsx
+    AnesthesiaRow.jsx / CdtRow.jsx / chart.css
 ```
 
----
-
-## Data Model
-
-Each entry in `medications.js` has this shape (all fields optional unless noted):
-
+### 상태 모델 (ChartView 내부, useReducer 하나)
 ```js
 {
-  id: string,                  // required, unique key
-  name: string,                // brand name
-  genericName: string,
-  dosePerKg: number,           // mg/kg per dose (default regimen)
-  concentration: number,       // mg/mL (default liquid)
-  formulationOptions: [        // dropdown choices
-    { label, mgPerMl }         // liquid
-    { label, tabletMg, maxTablets? }  // tablet
-  ],
-  dispensingUnit: { label, volumeMl },
-  adultDoseMg: number,         // dose when weight > 40 kg
-  adultMaxDailyMg: number,
-  adultMinDoseMg: number,
-  frequency: string,
-  maxDosePerKgPerDay: number,
-  minDosePerKg: number,
-  dosesPerDay: number,
-  warning: string,
-  roundDown: boolean,
-  absoluteMaxMg: number,
-  dosingRegimens: [ ... ],     // amoxicillin: multiple regimens
-  dayDoses: [ ... ],           // azithromycin: Day 1 vs Day 2+
+  activeKey: "restorative/direct_resto" | null,
+  versionId: "v1" | null,
+  fieldValues: { [tokenId]: string },   // tokenId = `${row}:${index}`
+  selectedTeeth: ["3","14"],
+  cdtCodes: ["D2140"],
+  anesthesia: { agentIdx, carpules }
 }
 ```
-
-**Adult threshold:** `ADULT_WEIGHT_KG = 40` in `calculations.js`.
+- procedure 변경 시 fieldValues/selectedTeeth/anesthesia 초기화, cdtCodes는 새 템플릿 기본값.
+- 다중 치아 값: `teeth.join(", #")` → 본문에 `#3, #14, #19`.
 
 ---
 
-## Current Medications
+## 구현 순서 — 단계마다 Codex 리뷰 게이트 통과 필수
 
-| ID | Name | Notes |
+각 Phase는 **`npm run build`/`npm run lint` 통과 → Codex 리뷰(`/review`) → P0/P1 수정 →
+다음 Phase**의 순서로 진행한다. P2/P3는 보고만 하고 남겨둔다.
+
+### Phase 0 — 준비
+- [x] branch `feat/chart-templates` 생성
+- [x] `PLAN.md`·`PLAN_chartrx.md`를 이 문서로 통합, `PLAN_chartrx.md` 삭제
+- [ ] Codex 리뷰: 문서 변경 확인
+
+### Phase 1 — 데이터 이식
+- [ ] `initialTemplates.js`: `FACTORY_TEMPLATES` 그대로 복사 (문구 변경 금지)
+- [ ] `dropdownOptions.js`: `OPTIONS`, `PH_LABELS` 그대로 복사
+- [ ] 파리티 검증 스크립트 `scripts/check-data-parity.mjs`: HTML의 해당 리터럴을 평가한 값과
+      모듈 export를 비교, 불일치 시 exit 1
+- [ ] `cdtCodes.js`, `anesthetics.js`: CJ 제공 데이터로 작성. 미제공 항목은 빈 배열 (추정 금지)
+- [ ] Codex 리뷰 → P0/P1 수정
+
+### Phase 2 — 셸 분리 (Dosage 회귀 없이)
+- [ ] `App.jsx` 본문 → `dosage/DosageCalculator.jsx` 이동, 로직 변경 없음
+- [ ] `App.css` → 셸 공통 + `dosage/dosage.css` 분리
+- [ ] `App.jsx`: mode 상태 + Topbar 탭 + MobileNav
+- [ ] Disclaimer 전체화면 게이트 제거, `disclaimerAccepted` 키 정리 (인라인 문구는 유지)
+- [ ] 디자인 토큰: ChartRx 팔레트(`--bg #f4f2ec`, `--accent #0f5c4a`, `--amber #c4702a` 등) 적용
+- [ ] `index.html` title → "ChartRx — Charting & Dosage"
+- **게이트:** `npm run build` exit 0, Dosage 회귀 검증 케이스 통과 → Codex 리뷰
+
+### Phase 3 — Initial Chart
+- [ ] `Sidebar.jsx`: 카테고리 헤더, 검색 필터, 버전 pill
+- [ ] `ChartCard.jsx` + `SoapRow.jsx`, `{ph}` → `FieldToken`
+- [ ] `FieldToken.jsx`: amber 버튼 + Tab 이동 (신규 기능)
+- [ ] 빈 상태/힌트 문구는 프로토타입 원문 그대로
+- [ ] `FieldDropdown.jsx`: 옵션 + Custom 입력, ↑↓/Enter/Esc, 화면 밖 뒤집기, 모바일 bottom sheet
+- [ ] `ToothSelector.jsx`: 다중 선택, 값 `teeth.join(", #")`
+- [ ] `AnesthesiaRow.jsx`: 마취제/carpule → mg 환산, 체중 대비 max 초과 시 경고
+- [ ] `CdtRow.jsx`: 기본 CDT 코드 칩 + 추가/삭제
+- [ ] `serializer.js`: 프로토타입 `getPlainChart` 포맷 + 마지막 CDT 줄
+- [ ] Copy(`navigator.clipboard.writeText` + toast), 모바일 패널 전환, 44px 터치 타겟
+- **게이트:** build/lint 통과 + 검증 케이스 → Codex 리뷰
+
+### Phase 4 — 문서 마무리
+- [ ] `CLAUDE.md`/`AGENTS.md` File Map을 실제 구조로 갱신
+- [ ] Domain Rules에 추가: 템플릿 문구 VERBATIM 이식 원칙, PHI 필드 금지, 마취 최대 용량
+      단일 소스(`medications.js`) 유지
+- [ ] Codex 리뷰 → 최종 확인
+
+---
+
+## 데이터 결정 (CJ 확인 필요 — 확인 전엔 UNKNOWN)
+
+| 항목 | 상태 | 비고 |
 |---|---|---|
-| `tylenol` | Acetaminophen | Liquid + tablets |
-| `advil` | Ibuprofen | Liquid + tablets |
-| `amoxicillin` | Amoxicillin | Standard vs high-dose regimens |
-| `azithromycin` | Azithromycin (Z-Pak) | Day 1 / Day 2+ dosing |
-| `lidocaine` | Lidocaine 2% w/ Epi | Carpule-based (dental) |
+| carpule 용량 | 확정 | `medications.js` 기준 1.7 mL 사용 |
+| Lidocaine 2% epi 최대 | 확정 | `medications.js` 4.4 mg/kg, absolute 500 mg (AAPD) |
+| Articaine / Mepivacaine / Bupivacaine 최대 mg/kg | UNKNOWN | 제공 전엔 mg 환산만 표시, max 경고 없음 |
+| CDT 코드 매핑 (24 procedure) | UNKNOWN | 미제공 procedure는 빈 배열 |
+| 신규 procedure 5개 문구 (Emergency exam, Occlusal adj, Night guard, Denture reline, Re-cement, Post-op check) | UNKNOWN | 문구는 CJ 작성 후 추가. 코드 구조는 데이터만 넣으면 되게 준비 |
 
 ---
 
-## Core Logic (`calculations.js`)
+## 후속 로드맵 (각 릴리스 후 실사용 검증)
 
-- `calculateDose(medication, weightKg, formulation, regimen, day)` — returns a result object with `doseMg`, `volumeMl`, `tablets`, `frequency`, `maxDailyMg`, etc.
-- `getEffectiveRegimen(medication, selectedRegimen, selectedFormulation)` — auto-selects high-dose regimen for 875 mg tablet.
-- `lbsToKg`, `formatMl`, `formatMg`, `formatTablets` — utility helpers.
-- No side effects; all pure functions — easy to port or test.
-
----
-
-## UI Flow
-
-1. **Disclaimer gate** — one-time accept, stored in `localStorage`.
-2. **Weight input** — kg or lbs with live conversion display.
-3. **Medication picker** — button list.
-4. **Formulation picker** — dropdown (shown after med selected).
-5. **Regimen picker** — dropdown (amoxicillin only).
-6. **Results card** — per-dose mg, volume/tablets, frequency, daily max, warnings.
-   - Dose range picker (1 mg steps) when a min–max range exists.
-   - Day picker for azithromycin (Day 1 / Day 2+).
+| 릴리스 | 범위 | 검증 |
+|---|---|---|
+| **MVP (이번)** | Initial Chart + Dosage 탭 + 모바일 반응형 | 2주 실사용, 차팅 시간 측정 |
+| v1.1 | Visit Notes(`VN_TEMPLATES`/`VN_OPTIONS`, FieldToken 재사용), Next appointment 구조화, 날짜+CDT 포함 복사, 하단 탭바 3개 | visit note 90초 이내 |
+| v1.2 | Settings(Templates/Options 편집, Export/Import JSON, Reset), `useChartData`/`storage.js` 연결 | 병원 커스텀 설정 완성 |
+| v2.0 | PWA(오프라인, 업데이트 배너). 배포는 GitHub Pages 유지 | 다기기 사용 |
 
 ---
 
-## Merge Considerations
+## 검증
 
-When combining with another project, note:
+```
+npm run build          # exit 0
+npm run lint            # exit 0
+node scripts/check-data-parity.mjs   # HTML vs 모듈 데이터 동일
+npm run dev              # 수동 확인
+```
 
-- **No router** — App.jsx is a single flat component. Adding `react-router-dom` would let this become one route/page of a larger app.
-- **No shared state** — all state is local to `App.jsx`. Easy to lift or wrap.
-- **CSS is global** — class names like `.card`, `.header`, `.select` are generic. Namespace or migrate to CSS modules / Tailwind to avoid collisions.
-- **`localStorage` key** — `"disclaimerAccepted"` is the only persisted key. Rename if the host app uses the same key.
-- **`medications.js` and `calculations.js`** are dependency-free — they can be dropped into any JS/TS project as-is.
-- **Vite base path** is `/pedcalc-web/` — change or remove when hosting under a different path.
-- **No TypeScript** — if the host project uses TS, adding `.d.ts` types or converting `calculations.js` to `.ts` would help.
+**Dosage 회귀 (Phase 2 후, 현재 앱과 결과 동일해야 함)**
+- 20 kg, Tylenol 160 mg/5 mL → per dose 300 mg, 9.4 mL, max/day 1500 mg
+- 20 kg, Amoxicillin 400 mg/5 mL, High dose → 450 mg q12h
+- 45 kg, Advil 200 mg tab → Adult 800 mg, 4 tab
+- 15 kg, Lidocaine → 66 mg, 3.3 mL, 1.9 carpule
+- 60 kg, Azithromycin Day 1 → 500 mg (absolute cap)
 
----
+**Chart (Phase 3 후)**
+- Extraction → Simple, tooth 토큰에 `3` 입력 → 나머지 tooth 토큰 자동 `3`, 하나만 `4`로 개별 수정 가능
+- ToothSelector에서 3,14 선택 → 본문 `#3, #14`
+- 15 kg + Lidocaine 2 carpules → 68 mg, max 66 mg 초과 경고 표시
+- Copy 결과가 프로토타입 `getPlainChart` 포맷과 동일 + 마지막 CDT 줄
+- 미입력 토큰 `[anesthetic]` 형식, 카운터 `filled/total` 정확
+- 375px 폭: 패널 전환, 드롭다운 bottom sheet, 하단 탭바
+- localStorage에 `chartrx_v2` 외 키 없음, 체중·차트 값은 새로고침 시 초기화
 
-## Pending / To-Do
-
-- [ ] Confirm which project this will be merged into and what the target stack is.
-- [ ] Decide routing strategy (this app as a route, a modal, or embedded component).
-- [ ] Resolve CSS namespace conflicts.
-- [ ] Decide whether to keep the disclaimer gate or use the host app's auth/gating.
-- [ ] Add more medications as needed (reference: AAPD Reference Manual 2025–2026).
+**배포:** main 머지 전 CJ 승인. 머지 즉시 GitHub Pages 반영됨.
