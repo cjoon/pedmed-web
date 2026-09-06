@@ -6,6 +6,9 @@
 // reproduced exactly, plus common chairside findings around it. Wording only —
 // no doses, no drug data. Edit freely; nothing here is a clinical constant.
 //
+// single: true marks a group whose categories are mutually exclusive (the AAE
+// diagnoses) — the picker then behaves like a radio list, not checkboxes.
+//
 // sep: how the selections join in the sentence. Symptoms read as a comma list,
 // objective findings as semicolon-separated observations.
 export const MULTI_FIELDS = {
@@ -104,12 +107,45 @@ export const MULTI_FIELDS = {
       "tender",
       "fistula present",
       "asymptomatic",
-      "necrotic",
-      "discoloration",
     ],
   },
-  pulpalFindings: {
-    label: "Pulpal/periapical findings",
+  // AAE Consensus Conference recommended diagnostic terminology (pulpal
+  // column) — verbatim category names, source provided by CJ 2026-09-06.
+  // The categories are mutually exclusive, so this group is single-select:
+  // picking one replaces the previous choice.
+  pulpalDx: {
+    label: "Pulpal diagnosis (AAE)",
+    single: true,
+    sep: ", ",
+    options: [
+      "Normal pulp",
+      "Reversible pulpitis",
+      "Symptomatic irreversible pulpitis",
+      "Asymptomatic irreversible pulpitis",
+      "Pulp necrosis",
+      "Previously treated",
+      "Previously initiated therapy",
+    ],
+  },
+  // AAE Consensus Conference recommended diagnostic terminology (apical
+  // column). Mutually exclusive, same as pulpalDx.
+  periapicalDx: {
+    label: "Periapical diagnosis (AAE)",
+    single: true,
+    sep: ", ",
+    options: [
+      "Normal apical tissues",
+      "Symptomatic apical periodontitis",
+      "Asymptomatic apical periodontitis",
+      "Acute apical abscess",
+      "Chronic apical abscess",
+      "Condensing osteitis",
+    ],
+  },
+  // Everything observed at the chair or on the radiograph that is not itself a
+  // diagnosis: test results, caries depth, swelling, radiographic signs.
+  clinicalFindings: {
+    label: "Clinical findings",
     sep: "; ",
     options: [
       "deep caries",
@@ -119,6 +155,7 @@ export const MULTI_FIELDS = {
       "exposure with hemorrhage",
       "hemostasis achieved <5min",
       "immature apex",
+      "crown discoloration",
       "(+) lingering cold/heat",
       "cold test (−)",
       "cold test (+) non-lingering",

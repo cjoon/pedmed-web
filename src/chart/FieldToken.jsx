@@ -54,6 +54,7 @@ export default function FieldToken({ id, ph, value, multi = false, onSetField })
           <MultiSelectDropdown
             label={MULTI_FIELDS[ph]?.label ?? ph}
             options={MULTI_FIELDS[ph]?.options ?? []}
+            single={MULTI_FIELDS[ph]?.single ?? false}
             value={value}
             onApply={commit}
             onClose={close}

@@ -8,6 +8,9 @@
 // single-valued or numeric ({surface}, {grade}, {pd}, {height}, …) are kept as
 // they were. Only {symptom} (VPT) and {complaint} (Ortho) were absorbed into
 // their multi-select groups. Drafted 2026-09-06 for CJ's review.
+//
+// Endo O lines carry three blanks: the chairside/radiographic findings, then
+// the AAE pulpal and periapical diagnostic categories (soOptions.js).
 export const SO_OVERRIDES = {
   restorative: {
     direct_resto: {
@@ -45,35 +48,35 @@ export const SO_OVERRIDES = {
     pulpotomy: {
       v1: {
         S: "#{tooth} c/o {+pulpalSx}.",
-        O: "#{tooth} {+pulpalFindings}.",
+        O: "#{tooth} {+clinicalFindings}. Pulpal: {+pulpalDx}; Periapical: {+periapicalDx}.",
       },
     },
     pulpectomy: {
       v1: {
         S: "#{tooth} c/o {+pulpalSx}.",
-        O: "#{tooth} {+pulpalFindings}.",
+        O: "#{tooth} {+clinicalFindings}. Pulpal: {+pulpalDx}; Periapical: {+periapicalDx}.",
       },
     },
     vpt: {
       v1: {
         S: "#{tooth} c/o {+pulpalSx}.",
-        O: "#{tooth} {exposure}; {+pulpalFindings}.",
+        O: "#{tooth} {exposure}; {+clinicalFindings}. Pulpal: {+pulpalDx}; Periapical: {+periapicalDx}.",
       },
       v2: {
         S: "#{tooth} c/o {+pulpalSx}.",
-        O: "#{tooth} {+pulpalFindings}.",
+        O: "#{tooth} {+clinicalFindings}. Pulpal: {+pulpalDx}; Periapical: {+periapicalDx}.",
       },
     },
     rct: {
       v1: {
         S: "#{tooth} c/o {+pulpalSx}.",
-        O: "#{tooth} {+pulpalFindings}.",
+        O: "#{tooth} {+clinicalFindings}. Pulpal: {+pulpalDx}; Periapical: {+periapicalDx}.",
       },
     },
     apicoectomy: {
       v1: {
         S: "#{tooth} c/o {+pulpalSx}.",
-        O: "#{tooth} {+pulpalFindings}.",
+        O: "#{tooth} {+clinicalFindings}. Pulpal: {+pulpalDx}; Periapical: {+periapicalDx}.",
       },
     },
   },

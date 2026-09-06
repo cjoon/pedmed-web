@@ -2,23 +2,35 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import useAnchoredPopover from "./useAnchoredPopover";
 
-// Multi-select editor for a "{+ph}" blank: check off as many findings as apply,
-// in the order chosen, plus free text for anything off-list. Not in the
-// prototype, where S/O were fixed sentences.
-export default function MultiSelectDropdown({ label, options, value, onApply, onClose, anchorRef }) {
+// Editor for a "{+ph}" blank: check off as many findings as apply, in the order
+// chosen, plus free text for anything off-list. Not in the prototype, where S/O
+// were fixed sentences. With `single`, the group's categories are mutually
+// exclusive (the AAE diagnoses) so a pick replaces the previous one.
+export default function MultiSelectDropdown({
+  label,
+  options,
+  value,
+  single = false,
+  onApply,
+  onClose,
+  anchorRef,
+}) {
   const [selected, setSelected] = useState(() => (Array.isArray(value) ? value : value ? [value] : []));
   const [custom, setCustom] = useState("");
   const [highlight, setHighlight] = useState(-1);
   const { popRef, popStyle } = useAnchoredPopover(anchorRef, onClose);
 
   function toggle(opt) {
-    setSelected((prev) => (prev.includes(opt) ? prev.filter((o) => o !== opt) : [...prev, opt]));
+    setSelected((prev) => {
+      if (prev.includes(opt)) return prev.filter((o) => o !== opt);
+      return single ? [opt] : [...prev, opt];
+    });
   }
 
   function commitCustom() {
     const v = custom.trim();
     if (!v) return;
-    setSelected((prev) => (prev.includes(v) ? prev : [...prev, v]));
+    setSelected((prev) => (prev.includes(v) ? prev : single ? [v] : [...prev, v]));
     setCustom("");
   }
 
@@ -43,7 +55,7 @@ export default function MultiSelectDropdown({ label, options, value, onApply, on
 
   return createPortal(
     <div
-      className="dropdown multi-select"
+      className={`dropdown multi-select${single ? " single-select" : ""}`}
       ref={popRef}
       style={popStyle}
       tabIndex={0}
@@ -100,7 +112,7 @@ export default function MultiSelectDropdown({ label, options, value, onApply, on
       </div>
       <div className="dd-custom">
         <button type="button" className="tooth-apply" onClick={() => onApply(selected)}>
-          {selected.length ? `Apply ${selected.length} selected` : "Clear"}
+          {selected.length ? (single ? `Apply ${selected[0]}` : `Apply ${selected.length} selected`) : "Clear"}
         </button>
       </div>
     </div>,

@@ -696,3 +696,8 @@
   border-color: var(--accent);
   background: var(--accent-soft);
 }
+
+/* Mutually exclusive groups (AAE diagnoses) read as radios, not checkboxes. */
+.single-select .multi-box {
+  border-radius: 50%;
+}
