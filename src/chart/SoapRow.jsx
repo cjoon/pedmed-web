@@ -5,7 +5,14 @@ function renderParts(parts, fieldValues, onSetField) {
     part.type === "text" ? (
       <span key={i}>{part.value}</span>
     ) : (
-      <FieldToken key={part.id} id={part.id} ph={part.ph} value={fieldValues[part.id]} onSetField={onSetField} />
+      <FieldToken
+        key={part.id}
+        id={part.id}
+        ph={part.ph}
+        multi={part.multi}
+        value={fieldValues[part.id]}
+        onSetField={onSetField}
+      />
     )
   );
 }

@@ -1,14 +1,17 @@
 import { useMemo, useReducer, useState } from "react";
-import { FACTORY_TEMPLATES } from "./data/initialTemplates";
+import { TEMPLATES } from "./data/templates";
 import { CDT_CODES } from "./data/cdtCodes";
 import { tokenizeVersion, flattenTokens } from "./tokenize";
 import { getPlainChart } from "./serializer";
+import { isFilled } from "./fieldValue";
 import Sidebar from "./Sidebar";
 import ChartCard from "./ChartCard";
+import DraftEditor from "../shared/DraftEditor";
+import FinalOutput from "../shared/FinalOutput";
 import "./chart.css";
 
 function findVersion(catKey, key, versionId) {
-  const item = FACTORY_TEMPLATES[catKey]?.items[key];
+  const item = TEMPLATES[catKey]?.items[key];
   if (!item) return null;
   const version = item.versions.find((v) => v.id === versionId) ?? item.versions[0];
   return { item, version };
@@ -48,7 +51,10 @@ export default function ChartView({ weightKg }) {
   const [active, setActive] = useState(null);
   const [mobilePanel, setMobilePanel] = useState("list");
   const [card, dispatch] = useReducer(cardReducer, initialCard);
-  const [copyStatus, setCopyStatus] = useState("");
+  // fill = pick a procedure and fill its blanks; edit = free-text the generated
+  // draft; final = read-only, copyable. Session-only, like every other value here.
+  const [step, setStep] = useState("fill");
+  const [draftText, setDraftText] = useState("");
 
   const selected = active ? findVersion(active.catKey, active.key, active.versionId) : null;
   const tokens = useMemo(() => (selected ? tokenizeVersion(selected.version) : null), [selected]);
@@ -62,31 +68,37 @@ export default function ChartView({ weightKg }) {
     [flatTokens]
   );
   const totalFields = flatTokens.filter((p) => p.type === "field").length;
-  const filledFields = Object.values(card.fieldValues).filter(Boolean).length;
+  const filledFields = Object.values(card.fieldValues).filter(isFilled).length;
 
   function selectProc(catKey, key, versionId) {
     setActive({ catKey, key, versionId });
     dispatch({ type: "reset", cdtCodes: CDT_CODES[catKey]?.[key] ?? [] });
+    setStep("fill");
+    setDraftText("");
     setMobilePanel("chart");
   }
 
   function handleReset() {
     if (!active) return;
     dispatch({ type: "reset", cdtCodes: CDT_CODES[active.catKey]?.[active.key] ?? [] });
+    setStep("fill");
+    setDraftText("");
   }
 
-  async function handleCopy() {
+  // Next always regenerates the draft from the current field values, so going
+  // Back to fill, changing a blank and pressing Next again discards hand edits.
+  function handleNext() {
     if (!selected || !tokens) return;
     const verLabel = selected.item.versions.length > 1 ? ` — ${selected.version.label}` : "";
-    const text = getPlainChart({
-      procedureName: selected.item.name + verLabel,
-      tokens,
-      fieldValues: card.fieldValues,
-      cdtCodes: card.cdtCodes,
-    });
-    await navigator.clipboard.writeText(text);
-    setCopyStatus("Chart copied to clipboard");
-    setTimeout(() => setCopyStatus(""), 2000);
+    setDraftText(
+      getPlainChart({
+        procedureName: selected.item.name + verLabel,
+        tokens,
+        fieldValues: card.fieldValues,
+        cdtCodes: card.cdtCodes,
+      })
+    );
+    setStep("edit");
   }
 
   return (
@@ -113,7 +125,7 @@ export default function ChartView({ weightKg }) {
               "Select a procedure"
             )}
           </div>
-          {selected && (
+          {selected && step === "fill" && (
             <>
               <span className="field-count">
                 {filledFields}/{totalFields} filled
@@ -121,14 +133,27 @@ export default function ChartView({ weightKg }) {
               <button type="button" className="chart-action-btn" onClick={handleReset}>
                 Clear
               </button>
-              <button type="button" className="chart-action-btn primary" onClick={handleCopy}>
-                Copy chart
+              <button type="button" className="chart-action-btn primary" onClick={handleNext}>
+                Next
               </button>
             </>
           )}
         </div>
         <div className="chart-scroll">
-          {selected && tokens ? (
+          {selected && tokens && step === "edit" && (
+            <DraftEditor
+              title="Review & edit"
+              text={draftText}
+              onChange={setDraftText}
+              onBack={() => setStep("fill")}
+              onDone={() => setStep("final")}
+              hint="Edit freely. Going back and pressing Next again rebuilds this from the blanks."
+            />
+          )}
+          {selected && tokens && step === "final" && (
+            <FinalOutput title="Final chart" text={draftText} onBack={() => setStep("edit")} />
+          )}
+          {selected && tokens && step === "fill" ? (
             <>
               <ChartCard
                 item={selected.item}
@@ -149,7 +174,7 @@ export default function ChartView({ weightKg }) {
                 chart
               </p>
             </>
-          ) : (
+          ) : step === "fill" ? (
             <div className="chart-empty">
               <div className="chart-empty-title">Pick a procedure to begin</div>
               <p>
@@ -158,10 +183,9 @@ export default function ChartView({ weightKg }) {
                 Tap highlighted blanks to select from a dropdown or type your own.
               </p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
-      {copyStatus && <div className="toast">{copyStatus}</div>}
     </div>
   );
 }

@@ -4,14 +4,16 @@
 // fieldify() (dental-charting.html L697) but produces data instead of HTML.
 function tokenizeText(text, counter) {
   const parts = [];
-  const re = /\{([^}]+)\}/g;
+  // "{ph}" is a single-value blank; "{+ph}" is a multi-select blank whose value
+  // is an array of chosen findings (see src/chart/data/soOptions.js).
+  const re = /\{(\+?)([^}]+)\}/g;
   let lastIndex = 0;
   let match;
   while ((match = re.exec(text))) {
     if (match.index > lastIndex) {
       parts.push({ type: "text", value: text.slice(lastIndex, match.index) });
     }
-    parts.push({ type: "field", ph: match[1], id: `f${counter.next++}` });
+    parts.push({ type: "field", ph: match[2], id: `f${counter.next++}`, multi: match[1] === "+" });
     lastIndex = re.lastIndex;
   }
   if (lastIndex < text.length) {

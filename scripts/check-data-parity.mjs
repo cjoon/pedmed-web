@@ -41,6 +41,7 @@ const { PH_LABELS } = await import(
 const { FACTORY_TEMPLATES } = await import(
   path.join(repoRoot, "src/chart/data/initialTemplates.js")
 );
+const { TEMPLATES } = await import(path.join(repoRoot, "src/chart/data/templates.js"));
 
 let ok = true;
 function compare(name, expected, actual) {
@@ -57,5 +58,31 @@ function compare(name, expected, actual) {
 compare("OPTIONS", htmlOptions, OPTIONS);
 compare("PH_LABELS", htmlPhLabels, PH_LABELS);
 compare("FACTORY_TEMPLATES", htmlFactoryTemplates, FACTORY_TEMPLATES);
+
+// The rendered TEMPLATES may differ from the prototype in S and O only (that is
+// what src/chart/data/soOverrides.js exists for). Everything else — procedure
+// names, tags, category labels, version labels, A and P — must still match.
+function stripSO(templates) {
+  return Object.fromEntries(
+    Object.entries(templates).map(([catKey, cat]) => [
+      catKey,
+      {
+        label: cat.label,
+        items: Object.fromEntries(
+          Object.entries(cat.items).map(([itemKey, item]) => [
+            itemKey,
+            {
+              name: item.name,
+              tag: item.tag,
+              versions: item.versions.map((v) => ({ id: v.id, label: v.label, A: v.A, P: v.P })),
+            },
+          ])
+        ),
+      },
+    ])
+  );
+}
+
+compare("TEMPLATES (excluding S/O)", stripSO(FACTORY_TEMPLATES), stripSO(TEMPLATES));
 
 if (!ok) process.exit(1);

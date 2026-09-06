@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { OPTIONS } from "./data/dropdownOptions";
+import useAnchoredPopover from "./useAnchoredPopover";
 
 // Not in the prototype (dental-charting.html has no multi-tooth UI — a
 // {tooth} field there is a plain single-value dropdown). Value format
@@ -16,32 +17,7 @@ function parseTeeth(value) {
 
 export default function ToothSelector({ value, onApply, onClose, anchorRef }) {
   const [selected, setSelected] = useState(() => parseTeeth(value));
-  const [style, setStyle] = useState({ top: 0, left: 0, visibility: "hidden" });
-  const popRef = useRef(null);
-
-  useLayoutEffect(() => {
-    const anchor = anchorRef.current;
-    const pop = popRef.current;
-    if (!anchor || !pop) return;
-    const r = anchor.getBoundingClientRect();
-    let top = r.bottom + 6;
-    let left = r.left;
-    const w = pop.offsetWidth;
-    const h = pop.offsetHeight;
-    if (left + w > window.innerWidth - 12) left = window.innerWidth - w - 12;
-    if (top + h > window.innerHeight - 12) top = r.top - h - 6;
-    setStyle({ top, left: Math.max(12, left), visibility: "visible" });
-  }, [anchorRef]);
-
-  useEffect(() => {
-    function handleOutside(e) {
-      if (popRef.current && !popRef.current.contains(e.target) && !anchorRef.current?.contains(e.target)) {
-        onClose();
-      }
-    }
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [anchorRef, onClose]);
+  const { popRef, popStyle } = useAnchoredPopover(anchorRef, onClose);
 
   function toggle(tooth) {
     setSelected((prev) => (prev.includes(tooth) ? prev.filter((t) => t !== tooth) : [...prev, tooth]));
@@ -55,7 +31,7 @@ export default function ToothSelector({ value, onApply, onClose, anchorRef }) {
     <div
       className="dropdown tooth-selector"
       ref={popRef}
-      style={{ position: "fixed", top: style.top, left: style.left, visibility: style.visibility }}
+      style={popStyle}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();

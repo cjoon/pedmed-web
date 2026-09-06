@@ -321,3 +321,56 @@
   padding-top: 10px;
   margin-top: 4px;
 }
+
+/* ── Rx form (calc → rx → final flow) ── */
+
+.rx-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rx-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rx-label {
+  flex-shrink: 0;
+  width: 76px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--subtitle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rx-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--title);
+  outline: none;
+}
+
+.rx-input:focus {
+  border-color: var(--accent);
+}
+
+.rx-row .select {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+.step-note {
+  align-self: center;
+  font-size: 12px;
+  color: var(--warning);
+}

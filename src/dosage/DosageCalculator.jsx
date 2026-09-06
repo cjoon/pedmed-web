@@ -8,6 +8,9 @@ import {
   formatMg,
   formatTablets,
 } from "../calculations";
+import RxEditor from "./RxEditor";
+import FinalOutput from "../shared/FinalOutput";
+import { buildInitialRx, buildRxText, frequencyOptionsFor } from "./rx";
 import "./dosage.css";
 
 export default function DosageCalculator({ onWeightKgChange }) {
@@ -18,6 +21,10 @@ export default function DosageCalculator({ onWeightKgChange }) {
   const [selectedRegimen, setSelectedRegimen] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDoseMg, setSelectedDoseMg] = useState(null);
+  // calc = pick weight/drug; rx = edit the prescription draft; final = copy/print.
+  // Session-only, like every other patient value here (never persisted).
+  const [step, setStep] = useState("calc");
+  const [rxFields, setRxFields] = useState(null);
 
   function handleMedSelect(med) {
     setSelectedMed(med);
@@ -95,6 +102,57 @@ export default function DosageCalculator({ onWeightKgChange }) {
   const activeTablets = showTablets && activeDoseMg && result?.tabletMg
     ? activeDoseMg / result.tabletMg
     : result?.tablets ?? null;
+
+  // A liquid's mL figure is meaningless without its concentration, so a drug
+  // that offers formulations must have one picked before it can be prescribed.
+  const formulationMissing = Boolean(selectedMed?.formulationOptions) && !selectedFormulation;
+
+  // Next always rebuilds the draft from the current calculation, so returning
+  // to calc, changing the dose and pressing Next again discards hand edits.
+  function handleNextRx() {
+    if (!result || !selectedMed || formulationMissing) return;
+    setRxFields(
+      buildInitialRx({
+        med: selectedMed,
+        formulation: selectedFormulation,
+        result,
+        doseMg: activeDoseMg,
+        volumeMl: activeVolumeMl,
+        tablets: activeTablets,
+        weightKg: weightKgDisplay,
+      })
+    );
+    setStep("rx");
+  }
+
+  if (step !== "calc" && rxFields) {
+    return (
+      <div className="dosage">
+        <header className="header">
+          <h1 className="header-title">PedMed</h1>
+          <p className="header-subtitle">Pediatric Dosage Calculator</p>
+        </header>
+        <main className="dosage-main">
+          {step === "rx" ? (
+            <RxEditor
+              fields={rxFields}
+              onChange={setRxFields}
+              frequencyOptions={frequencyOptionsFor(result?.frequency).options}
+              onBack={() => setStep("calc")}
+              onDone={() => setStep("final")}
+            />
+          ) : (
+            <FinalOutput
+              title="Prescription"
+              text={buildRxText(rxFields)}
+              onBack={() => setStep("rx")}
+              printable
+            />
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="dosage">
@@ -293,6 +351,20 @@ export default function DosageCalculator({ onWeightKgChange }) {
               {result.adult && selectedMed?.adultNote && (
                 <p className="warning-text info">ℹ {selectedMed.adultNote}</p>
               )}
+            </div>
+
+            <div className="step-actions">
+              {formulationMissing && (
+                <span className="step-note">Select a formulation to prescribe</span>
+              )}
+              <button
+                type="button"
+                className="step-btn primary"
+                onClick={handleNextRx}
+                disabled={formulationMissing}
+              >
+                Next → Rx
+              </button>
             </div>
 
             <div className="result-disclaimer">

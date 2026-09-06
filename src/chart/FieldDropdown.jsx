@@ -1,44 +1,20 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import useAnchoredPopover from "./useAnchoredPopover";
 
 // Anchored option list + free-text fallback for a single {ph} token.
-// Positioning/flip-up logic mirrors the prototype's positionDD()
-// (dental-charting.html L725-731).
+// Positioning/dismissal come from useAnchoredPopover, which mirrors the
+// prototype's positionDD() (dental-charting.html L725-731).
 export default function FieldDropdown({ label, options, value, onSelect, onClose, anchorRef }) {
   const [custom, setCustom] = useState(value || "");
   const [highlight, setHighlight] = useState(-1);
-  const [style, setStyle] = useState({ top: 0, left: 0, visibility: "hidden" });
-  const ddRef = useRef(null);
-
-  useLayoutEffect(() => {
-    const anchor = anchorRef.current;
-    const dd = ddRef.current;
-    if (!anchor || !dd) return;
-    const r = anchor.getBoundingClientRect();
-    let top = r.bottom + 6;
-    let left = r.left;
-    const w = dd.offsetWidth;
-    const h = dd.offsetHeight;
-    if (left + w > window.innerWidth - 12) left = window.innerWidth - w - 12;
-    if (top + h > window.innerHeight - 12) top = r.top - h - 6;
-    setStyle({ top, left: Math.max(12, left), visibility: "visible" });
-  }, [anchorRef]);
+  const { popRef: ddRef, popStyle } = useAnchoredPopover(anchorRef, onClose);
 
   useEffect(() => {
     const dd = ddRef.current;
     if (options.length) dd?.focus();
     else dd?.querySelector("input")?.focus();
-  }, [options.length]);
-
-  useEffect(() => {
-    function handleOutside(e) {
-      if (ddRef.current && !ddRef.current.contains(e.target) && !anchorRef.current?.contains(e.target)) {
-        onClose();
-      }
-    }
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [anchorRef, onClose]);
+  }, [options.length, ddRef]);
 
   function commitCustom() {
     const v = custom.trim();
@@ -68,7 +44,7 @@ export default function FieldDropdown({ label, options, value, onSelect, onClose
     <div
       className="dropdown"
       ref={ddRef}
-      style={{ position: "fixed", top: style.top, left: style.left, visibility: style.visibility }}
+      style={popStyle}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onClick={(e) => e.stopPropagation()}

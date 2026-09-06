@@ -2,9 +2,15 @@
 // path verbatim (dental-charting.html L946-957): title + "=" underline, then
 // "S: text" lines and a "P:\n  - step" list, blank line between sections.
 // The MVP adds one line for CDT codes, which the prototype does not have.
+import { displayValue, isFilled } from "./fieldValue";
+
 function renderParts(parts, fieldValues) {
   return parts
-    .map((part) => (part.type === "text" ? part.value : fieldValues[part.id] || `[${part.ph}]`))
+    .map((part) => {
+      if (part.type === "text") return part.value;
+      const value = fieldValues[part.id];
+      return isFilled(value) ? displayValue(part.ph, value) : `[${part.ph}]`;
+    })
     .join("")
     .replace(/\s+/g, " ")
     .trim();

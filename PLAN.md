@@ -153,6 +153,26 @@ src/
       단일 소스(`medications.js`) 유지
 - [ ] Codex 리뷰 → 최종 확인
 
+### Phase 5 — 편집/확정 단계, Suture, 처방, S/O 다중선택 (2026-09-06 요청)
+
+CJ 요청 4건. 작업 브랜치 `feat/review-flow`.
+
+- [x] 5a: `src/shared/DraftEditor.jsx` / `FinalOutput.jsx` + Chart의 fill → edit → final 단계.
+      Copy는 final 단계에서만. Next는 항상 토큰 값에서 초안을 재생성(자유 편집분은 버림)
+- [x] 5b: `useAnchoredPopover.js`로 팝오버 위치/닫기 로직 공통화 → `SutureSelector.jsx`
+      (굵기 3-0~6-0 + 재질 7종, CJ 확정 목록, 값 형식 `4-0 silk`). `OPTIONS.suture`는 미수정
+- [x] 5c: Dosage 탭 calc → rx → final. `rx.js`(초안·텍스트 생성, 용량 계산 없음),
+      `rxOptions.js`(route/frequency/refills), `RxEditor.jsx`. final에서 복사/인쇄.
+      주사제(카풀 계량)는 route 기본값 공란 — "by mouth" 오기재 방지
+- [x] 5d: `{+ph}` 다중선택 토큰(`tokenize.js`, `fieldValue.js`, `MultiSelectDropdown.jsx`),
+      `soOptions.js`(16 그룹 219 항목), `soOverrides.js`(32 version S/O 전부),
+      `templates.js`(FACTORY_TEMPLATES + 오버레이, 불일치 시 throw).
+      parity 스크립트에 "S/O 외 전부 동일" 검사 추가
+- [x] 5e: CLAUDE.md/AGENTS.md File Map·Domain Rules, PLAN.md 갱신
+- [ ] Codex 리뷰 → P0/P1 수정
+- **CJ 검토 대기:** `src/chart/data/soOptions.js`의 소견 어휘, `src/dosage/rxOptions.js`의
+      sig 문구. 둘 다 임상 문구일 뿐 용량 데이터가 아님
+
 ---
 
 ## 데이터 결정 (CJ 확인 필요 — 확인 전엔 UNKNOWN)

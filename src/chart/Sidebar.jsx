@@ -1,4 +1,4 @@
-import { FACTORY_TEMPLATES } from "./data/initialTemplates";
+import { TEMPLATES } from "./data/templates";
 
 export default function Sidebar({ search, onSearch, active, onSelect, className = "" }) {
   return (
@@ -12,7 +12,7 @@ export default function Sidebar({ search, onSearch, active, onSelect, className 
         />
       </div>
       <nav className="proc-list">
-        {Object.entries(FACTORY_TEMPLATES).map(([catKey, cat]) => {
+        {Object.entries(TEMPLATES).map(([catKey, cat]) => {
           const q = search.toLowerCase();
           const matches = Object.entries(cat.items).filter(
             ([, item]) => item.name.toLowerCase().includes(q) || item.tag.toLowerCase().includes(q)

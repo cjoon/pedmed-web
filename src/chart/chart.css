@@ -572,7 +572,7 @@
   min-width: 100px;
 }
 
-/* ── Hint / toast ── */
+/* ── Hint ── (the copy toast now lives in App.css, shared with the Rx flow) */
 
 .hint {
   max-width: 820px;
@@ -581,19 +581,6 @@
   color: var(--ink-soft);
   text-align: center;
   font-style: italic;
-}
-
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
-  background: var(--ink);
-  color: #fff;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 13px;
-  z-index: 300;
 }
 
 /* ── Mobile: one full-screen panel at a time ── */
@@ -650,7 +637,62 @@
   .ver-pill,
   .chart-action-btn,
   .tooth-btn,
+  .suture-chip,
   .dd-opt {
     min-height: 44px;
   }
+}
+
+/* ── Suture selector (size + material, no prototype equivalent) ── */
+
+.suture-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px;
+}
+
+.suture-chip {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: "IBM Plex Mono", monospace;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--field);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.suture-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Multi-select findings dropdown ── */
+
+.multi-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.multi-box {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--field);
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.multi-opt.on .multi-box {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
