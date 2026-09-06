@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DosageCalculator from "./dosage/DosageCalculator";
+import ChartView from "./chart/ChartView";
 import "./App.css";
 
 const TABS = [
@@ -9,6 +10,10 @@ const TABS = [
 
 export default function App() {
   const [mode, setMode] = useState("chart");
+  // Shared across tabs (session-only, never persisted — PHI-safety, matches
+  // the "no data stored" footer claim) so Chart's anesthesia calculator can
+  // use the weight entered on the Dosage tab.
+  const [weightKg, setWeightKg] = useState(null);
 
   // One-time cleanup: the old full-screen disclaimer gate is gone, so this
   // key from prior versions is dead weight in returning users' localStorage.
@@ -35,10 +40,10 @@ export default function App() {
 
       <div className="app-content">
         <div className={mode === "chart" ? "" : "hidden"}>
-          <ChartPlaceholder />
+          <ChartView weightKg={weightKg} />
         </div>
         <div className={mode === "dosage" ? "" : "hidden"}>
-          <DosageCalculator />
+          <DosageCalculator onWeightKgChange={setWeightKg} />
         </div>
       </div>
 
@@ -62,14 +67,5 @@ export default function App() {
         ))}
       </nav>
     </div>
-  );
-}
-
-function ChartPlaceholder() {
-  return (
-    <section className="chart-placeholder">
-      <h2>Initial Chart</h2>
-      <p>Charting templates ship in Phase 3.</p>
-    </section>
   );
 }

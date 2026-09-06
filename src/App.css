@@ -11,6 +11,19 @@
   --highlight-bg: #e8f2ee;
   --text: #26302b;
   --med-hover: #f0eee6;
+
+  /* Chart-only tokens, taken verbatim from dental-charting.html's :root (L18) */
+  --panel: #fbfaf6;
+  --ink: #1a2420;
+  --ink-soft: #5a655e;
+  --line: #d9d5c8;
+  --accent-soft: #e3efe9;
+  --accent-bright: #14745d;
+  --field: #fffdf7;
+  --field-active: #fff8e6;
+  --amber-soft: #f6e9da;
+  --red: #b4452f;
+  --red-soft: #f7ebe8;
 }
 
 * {

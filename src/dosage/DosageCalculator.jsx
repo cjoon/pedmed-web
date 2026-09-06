@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { medications } from "../medications";
 import {
   calculateDose,
@@ -10,7 +10,7 @@ import {
 } from "../calculations";
 import "./dosage.css";
 
-export default function DosageCalculator() {
+export default function DosageCalculator({ onWeightKgChange }) {
   const [weightInput, setWeightInput] = useState("");
   const [unit, setUnit] = useState("lbs");
   const [selectedMed, setSelectedMed] = useState(null);
@@ -38,6 +38,12 @@ export default function DosageCalculator() {
   const weightKg =
     weightInput === "" ? null : unit === "kg" ? parseFloat(weightInput) : lbsToKg(parseFloat(weightInput));
   const weightKgDisplay = weightKg != null && !isNaN(weightKg) && weightKg > 0 ? weightKg : null;
+
+  // Report the computed weight up to App so the Chart tab's anesthesia
+  // calculator can share it (session-only state owned by App, not here).
+  useEffect(() => {
+    onWeightKgChange?.(weightKgDisplay);
+  }, [weightKgDisplay, onWeightKgChange]);
 
   // Reset selected dose when weight/day/regimen changes (adjust state during
   // render instead of an effect, per https://react.dev/learn/you-might-not-need-an-effect)
