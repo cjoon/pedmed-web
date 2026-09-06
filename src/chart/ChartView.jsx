@@ -67,8 +67,14 @@ export default function ChartView({ weightKg }) {
     () => flatTokens.some((p) => p.type === "field" && (p.ph === "anesthetic" || p.ph === "dose")),
     [flatTokens]
   );
-  const totalFields = flatTokens.filter((p) => p.type === "field").length;
-  const filledFields = Object.values(card.fieldValues).filter(isFilled).length;
+  // The counter tracks required blanks only: an optional one left empty simply
+  // drops out of the note, so counting it would make "filled/total" unreachable.
+  const requiredIds = useMemo(
+    () => flatTokens.filter((p) => p.type === "field" && !p.optional).map((p) => p.id),
+    [flatTokens]
+  );
+  const totalFields = requiredIds.length;
+  const filledFields = requiredIds.filter((id) => isFilled(card.fieldValues[id])).length;
 
   function selectProc(catKey, key, versionId) {
     setActive({ catKey, key, versionId });

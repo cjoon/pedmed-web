@@ -10,6 +10,7 @@ function renderParts(parts, fieldValues, onSetField) {
         id={part.id}
         ph={part.ph}
         multi={part.multi}
+        optional={part.optional}
         value={fieldValues[part.id]}
         onSetField={onSetField}
       />

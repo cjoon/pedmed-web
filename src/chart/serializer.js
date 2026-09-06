@@ -9,7 +9,8 @@ function renderParts(parts, fieldValues) {
     .map((part) => {
       if (part.type === "text") return part.value;
       const value = fieldValues[part.id];
-      return isFilled(value) ? displayValue(part.ph, value) : `[${part.ph}]`;
+      if (isFilled(value)) return displayValue(part.ph, value);
+      return part.optional ? "" : `[${part.ph}]`;
     })
     .join("")
     .replace(/\s+/g, " ")

@@ -701,3 +701,9 @@
 .single-select .multi-box {
   border-radius: 50%;
 }
+
+/* Optional blanks: dimmer, so an empty one does not read as unfinished work. */
+.fld.optional {
+  border-style: dashed;
+  background: transparent;
+}

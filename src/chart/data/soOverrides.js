@@ -11,6 +11,12 @@
 //
 // Endo O lines carry three blanks: the chairside/radiographic findings, then
 // the AAE pulpal and periapical diagnostic categories (soOptions.js).
+// Perio procedures and the recall exam end with the 2017 World Workshop
+// periodontal diagnosis. Extent, stage and grade are optional blanks ("{?+…}")
+// because staging and grading apply to periodontitis only — for peri-implant
+// conditions, gingivitis or health they are left empty and drop out of the note.
+// A second optional blank holds the older 1999 AAP diagnosis for charts that
+// still use it; it carries its own "1999 AAP:" label and closing period.
 export const SO_OVERRIDES = {
   restorative: {
     direct_resto: {
@@ -138,47 +144,47 @@ export const SO_OVERRIDES = {
     srp: {
       v1: {
         S: "Px {+perioSx}.",
-        O: "Perio charting: generalized PD {pd}mm, bone loss {boneloss}%; {+perioFindings}.",
+        O: "Perio charting: generalized PD {pd}mm, bone loss {boneloss}%; {+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
     perio_maint: {
       v1: {
         S: "Px {+perioSx}.",
-        O: "Re-charting: localized residual PD {pd}mm at {sites}; BOP {bop}%; {+perioFindings}.",
+        O: "Re-charting: localized residual PD {pd}mm at {sites}; BOP {bop}%; {+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
     gtr: {
       v1: {
         S: "#{tooth} {+perioSx}.",
-        O: "#{tooth} {wall} intrabony defect, PD {pd}mm; {+perioFindings}.",
+        O: "#{tooth} {wall} intrabony defect, PD {pd}mm; {+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
     crown_length: {
       v1: {
         S: "Px c/o {+perioSx}.",
-        O: "{+perioFindings}.",
+        O: "{+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
       v2: {
         S: "#{tooth} {+perioSx}.",
-        O: "#{tooth} {+perioFindings}.",
+        O: "#{tooth} {+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
     frenectomy: {
       v1: {
         S: "Px c/o {+perioSx}.",
-        O: "Prominent {frenum} frenum; {+perioFindings}.",
+        O: "Prominent {frenum} frenum; {+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
     ctg: {
       v1: {
         S: "#{tooth} {+perioSx}.",
-        O: "#{tooth} {recClass} recession {recAmount}mm; {+perioFindings}.",
+        O: "#{tooth} {recClass} recession {recAmount}mm; {+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
     fgg: {
       v1: {
         S: "#{tooth} {+perioSx}.",
-        O: "#{tooth} inadequate KT (<{kt}mm); {+perioFindings}.",
+        O: "#{tooth} inadequate KT (<{kt}mm); {+perioFindings}. Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
   },
@@ -186,7 +192,7 @@ export const SO_OVERRIDES = {
     checkup: {
       v1: {
         S: "Px for {+examSx}.",
-        O: "{+examFindings} ({xray}).",
+        O: "{+examFindings} ({xray}). Perio Dx: {?+perioExtent} {?+perioStage} {?+perioGrade} {+perioDx}. {?+perioDx1999}",
       },
     },
     ortho: {

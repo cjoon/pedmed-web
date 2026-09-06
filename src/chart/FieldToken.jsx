@@ -15,7 +15,7 @@ import { displayValue, isFilled } from "./fieldValue";
 // check below opens the editor on keyboard-Tab arrival without also
 // double-toggling on a mouse click (a plain click's resulting focus is not
 // ":focus-visible" in evergreen browsers).
-export default function FieldToken({ id, ph, value, multi = false, onSetField }) {
+export default function FieldToken({ id, ph, value, multi = false, optional = false, onSetField }) {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
 
@@ -40,7 +40,10 @@ export default function FieldToken({ id, ph, value, multi = false, onSetField })
     <button
       type="button"
       ref={anchorRef}
-      className={`fld${isFilled(value) ? " filled" : ""}${open ? " open" : ""}`}
+      className={`fld${isFilled(value) ? " filled" : ""}${open ? " open" : ""}${
+        optional && !isFilled(value) ? " optional" : ""
+      }`}
+      title={optional && !isFilled(value) ? "Optional — leave empty to drop it from the note" : undefined}
       onClick={() => setOpen((o) => !o)}
       onFocus={handleFocus}
       onKeyDown={handleKeyDown}

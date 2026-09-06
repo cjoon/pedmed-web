@@ -35,7 +35,8 @@ function buildTemplates() {
             `${catKey}/${itemKey}/${version.id} may only override S and O (got ${extraKeys.join(", ")})`
           );
           for (const text of [override.S, override.O]) {
-            for (const match of text.matchAll(/\{\+([^}]+)\}/g)) {
+            // Matches "{+ph}" and the optional form "{?+ph}" (see tokenize.js).
+            for (const match of text.matchAll(/\{[?]?\+([^}]+)\}/g)) {
               assert(
                 MULTI_FIELDS[match[1]],
                 `${catKey}/${itemKey}/${version.id} references unknown multi-select group "${match[1]}"`

@@ -6,6 +6,9 @@
 // reproduced exactly, plus common chairside findings around it. Wording only —
 // no doses, no drug data. Edit freely; nothing here is a clinical constant.
 //
+// prefix/suffix wrap a non-empty value (label, closing period) so an optional
+// clause leaves nothing behind when it is not used.
+//
 // single: true marks a group whose categories are mutually exclusive (the AAE
 // diagnoses) — the picker then behaves like a radio list, not checkboxes.
 //
@@ -274,6 +277,79 @@ export const MULTI_FIELDS = {
       "shallow vestibule",
       "frenum pull",
       "inadequate KT",
+    ],
+  },
+  // 2017 World Workshop (AAP/EFP) classification of periodontal and peri-implant
+  // diseases and conditions — category names as published. Source standard
+  // chosen with CJ 2026-09-06. Each of the four fields is single-select; the
+  // sentence reads "<extent> <stage> <grade> <diagnosis>", e.g.
+  // "Generalized Stage III Grade B periodontitis".
+  perioDx: {
+    label: "Periodontal diagnosis (2017 WW)",
+    single: true,
+    sep: ", ",
+    options: [
+      "periodontal health",
+      "dental biofilm-induced gingivitis",
+      "non-biofilm-induced gingival disease",
+      "periodontitis",
+      "necrotizing gingivitis",
+      "necrotizing periodontitis",
+      "periodontitis as a manifestation of systemic disease",
+      "gingival recession (mucogingival deformity)",
+      "occlusal trauma",
+      "peri-implant health",
+      "peri-implant mucositis",
+      "peri-implantitis",
+    ],
+  },
+  perioExtent: {
+    label: "Extent (2017 WW)",
+    single: true,
+    sep: ", ",
+    options: ["Localized", "Generalized", "Molar-incisor pattern"],
+  },
+  // Staging and grading apply to periodontitis only, so these two blanks are
+  // optional in the templates and disappear when left empty.
+  perioStage: {
+    label: "Stage (2017 WW)",
+    single: true,
+    sep: ", ",
+    options: ["Stage I", "Stage II", "Stage III", "Stage IV"],
+  },
+  perioGrade: {
+    label: "Grade (2017 WW)",
+    single: true,
+    sep: ", ",
+    options: ["Grade A", "Grade B", "Grade C"],
+  },
+  // 1999 AAP (Armitage) classification, kept alongside the 2017 one for charts
+  // and referrals that still use the older terminology. Added at CJ's request
+  // 2026-09-06. Severity is folded into the two graded categories because the
+  // 1999 system qualifies only those; prefix/suffix carry the label and the
+  // closing period so the whole clause disappears when nothing is selected.
+  perioDx1999: {
+    label: "Periodontal diagnosis (1999 AAP)",
+    single: true,
+    sep: ", ",
+    prefix: "1999 AAP: ",
+    suffix: ".",
+    options: [
+      "chronic periodontitis, slight (CAL 1–2 mm)",
+      "chronic periodontitis, moderate (CAL 3–4 mm)",
+      "chronic periodontitis, severe (CAL ≥5 mm)",
+      "localized aggressive periodontitis",
+      "generalized aggressive periodontitis",
+      "plaque-induced gingivitis",
+      "non-plaque-induced gingival disease",
+      "periodontitis as a manifestation of systemic disease",
+      "necrotizing ulcerative gingivitis (NUG)",
+      "necrotizing ulcerative periodontitis (NUP)",
+      "gingival abscess",
+      "periodontal abscess",
+      "pericoronal abscess",
+      "combined periodontic-endodontic lesion",
+      "developmental or acquired deformity/condition",
     ],
   },
   examSx: {

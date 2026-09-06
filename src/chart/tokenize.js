@@ -5,15 +5,24 @@
 function tokenizeText(text, counter) {
   const parts = [];
   // "{ph}" is a single-value blank; "{+ph}" is a multi-select blank whose value
-  // is an array of chosen findings (see src/chart/data/soOptions.js).
-  const re = /\{(\+?)([^}]+)\}/g;
+  // is an array of chosen findings (see src/chart/data/soOptions.js). A leading
+  // "?" ("{?+ph}") marks the blank optional: left empty it disappears from the
+  // sentence instead of printing a "[ph]" placeholder, which is how modifiers
+  // that only apply to some diagnoses (periodontal stage/grade) are handled.
+  const re = /\{([?+]*)([^}]+)\}/g;
   let lastIndex = 0;
   let match;
   while ((match = re.exec(text))) {
     if (match.index > lastIndex) {
       parts.push({ type: "text", value: text.slice(lastIndex, match.index) });
     }
-    parts.push({ type: "field", ph: match[2], id: `f${counter.next++}`, multi: match[1] === "+" });
+    parts.push({
+      type: "field",
+      ph: match[2],
+      id: `f${counter.next++}`,
+      multi: match[1].includes("+"),
+      optional: match[1].includes("?"),
+    });
     lastIndex = re.lastIndex;
   }
   if (lastIndex < text.length) {

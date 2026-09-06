@@ -10,6 +10,9 @@ export function isFilled(value) {
 
 export function displayValue(ph, value) {
   if (!isFilled(value)) return "";
+  const group = MULTI_FIELDS[ph];
   if (!Array.isArray(value)) return value;
-  return value.join(MULTI_FIELDS[ph]?.sep ?? ", ");
+  // prefix/suffix let an optional clause carry its own label and punctuation,
+  // so the label disappears with the value instead of dangling in the sentence.
+  return `${group?.prefix ?? ""}${value.join(group?.sep ?? ", ")}${group?.suffix ?? ""}`;
 }
