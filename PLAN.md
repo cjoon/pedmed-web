@@ -108,41 +108,48 @@ src/
 ### Phase 0 — 준비
 - [x] branch `feat/chart-templates` 생성
 - [x] `PLAN.md`·`PLAN_chartrx.md`를 이 문서로 통합, `PLAN_chartrx.md` 삭제
-- [ ] Codex 리뷰: 문서 변경 확인
+- [x] Codex 리뷰: 문서 변경 확인
 
 ### Phase 1 — 데이터 이식
-- [ ] `initialTemplates.js`: `FACTORY_TEMPLATES` 그대로 복사 (문구 변경 금지)
-- [ ] `dropdownOptions.js`: `OPTIONS`, `PH_LABELS` 그대로 복사
-- [ ] 파리티 검증 스크립트 `scripts/check-data-parity.mjs`: HTML의 해당 리터럴을 평가한 값과
+- [x] `initialTemplates.js`: `FACTORY_TEMPLATES` 그대로 복사 (문구 변경 금지)
+- [x] `dropdownOptions.js`: `OPTIONS`, `PH_LABELS` 그대로 복사
+- [x] 파리티 검증 스크립트 `scripts/check-data-parity.mjs`: HTML의 해당 리터럴을 평가한 값과
       모듈 export를 비교, 불일치 시 exit 1
-- [ ] `cdtCodes.js`, `anesthetics.js`: CJ 제공 데이터로 작성. 미제공 항목은 빈 배열 (추정 금지)
-- [ ] Codex 리뷰 → P0/P1 수정
+- [x] `cdtCodes.js`, `anesthetics.js`: 실제 procedure/agent 키로 뼈대만 작성. CJ 미제공 값(CDT
+      코드 전체, Articaine/Mepivacaine/Bupivacaine max mg/kg)은 빈 배열/`null`(UNKNOWN) —
+      추정하지 않음
+- [x] Codex 리뷰 → P0/P1 수정 (findings 없음, PASS)
 
 ### Phase 2 — 셸 분리 (Dosage 회귀 없이)
-- [ ] `App.jsx` 본문 → `dosage/DosageCalculator.jsx` 이동, 로직 변경 없음
-- [ ] `App.css` → 셸 공통 + `dosage/dosage.css` 분리
-- [ ] `App.jsx`: mode 상태 + Topbar 탭 + MobileNav
-- [ ] Disclaimer 전체화면 게이트 제거, `disclaimerAccepted` 키 정리 (인라인 문구는 유지)
-- [ ] 디자인 토큰: ChartRx 팔레트(`--bg #f4f2ec`, `--accent #0f5c4a`, `--amber #c4702a` 등) 적용
-- [ ] `index.html` title → "ChartRx — Charting & Dosage"
-- **게이트:** `npm run build` exit 0, Dosage 회귀 검증 케이스 통과 → Codex 리뷰
+- [x] `App.jsx` 본문 → `dosage/DosageCalculator.jsx` 이동, 로직 변경 없음
+- [x] `App.css` → 셸 공통 + `dosage/dosage.css` 분리
+- [x] `App.jsx`: mode 상태 + Topbar 탭 + MobileNav
+- [x] Disclaimer 전체화면 게이트 제거, `disclaimerAccepted` 키 정리 (5항목을 상시 노출 푸터로 이전,
+      결과 카드 내 한 줄 문구도 안전상 유지 — Codex 리뷰에서 확인)
+- [x] 디자인 토큰: ChartRx 팔레트(`--bg #f4f2ec`, `--accent #0f5c4a`, `--amber #c4702a` 등) 적용
+- [x] `index.html` title → "ChartRx — Charting & Dosage"
+- **게이트:** `npm run build` exit 0, Dosage 회귀 검증 케이스 통과 → Codex 리뷰 (3라운드, 최종 PASS)
 
 ### Phase 3 — Initial Chart
-- [ ] `Sidebar.jsx`: 카테고리 헤더, 검색 필터, 버전 pill
-- [ ] `ChartCard.jsx` + `SoapRow.jsx`, `{ph}` → `FieldToken`
-- [ ] `FieldToken.jsx`: amber 버튼 + Tab 이동 (신규 기능)
-- [ ] 빈 상태/힌트 문구는 프로토타입 원문 그대로
-- [ ] `FieldDropdown.jsx`: 옵션 + Custom 입력, ↑↓/Enter/Esc, 화면 밖 뒤집기, 모바일 bottom sheet
-- [ ] `ToothSelector.jsx`: 다중 선택, 값 `teeth.join(", #")`
-- [ ] `AnesthesiaRow.jsx`: 마취제/carpule → mg 환산, 체중 대비 max 초과 시 경고
-- [ ] `CdtRow.jsx`: 기본 CDT 코드 칩 + 추가/삭제
-- [ ] `serializer.js`: 프로토타입 `getPlainChart` 포맷 + 마지막 CDT 줄
-- [ ] Copy(`navigator.clipboard.writeText` + toast), 모바일 패널 전환, 44px 터치 타겟
-- **게이트:** build/lint 통과 + 검증 케이스 → Codex 리뷰
+- [x] `Sidebar.jsx`: 카테고리 헤더, 검색 필터, 버전 pill
+- [x] `ChartCard.jsx` + `SoapRow.jsx`, `{ph}` → `FieldToken`
+- [x] `FieldToken.jsx`: amber 버튼 + Tab 이동 (신규 기능 — 네이티브 `<button>` + `:focus-visible`)
+- [x] 빈 상태/힌트 문구는 프로토타입 원문 그대로
+- [x] `FieldDropdown.jsx`: 옵션 + Custom 입력, ↑↓/Enter/Esc, 화면 밖 뒤집기, 모바일 bottom sheet
+- [x] `ToothSelector.jsx`: 다중 선택, 값 `teeth.join(", #")`. 선택 0개로도 Apply 가능(필드 개별 삭제)
+- [x] `AnesthesiaRow.jsx`: 마취제/carpule → mg 환산, 체중 대비 max 초과 시 경고. `weightKg`를
+      `App.jsx`로 끌어올려 Dosage 탭과 공유(Phase 2에서 보류했던 항목, Codex P2로 재확인 후 처리)
+- [x] `CdtRow.jsx`: 기본 CDT 코드 칩 + 추가/삭제
+- [x] `serializer.js`: 프로토타입 `getPlainChart` 포맷 + 마지막 CDT 줄
+- [x] Copy(`navigator.clipboard.writeText` + toast), 모바일 패널 전환, 44px 터치 타겟
+- **게이트:** build/lint 통과 + 검증 케이스(Playwright로 브라우저 실사용 확인) → Codex 리뷰
+  (3라운드 — Custom 입력 버블링, 모바일 bottom sheet, 음수 carpule, 치아 삭제 불가 수정 후 최종 PASS)
+- **보류(v1.2 이후):** `useChartData.js`/`storage.js` — MVP는 템플릿 편집(Settings) 기능이 없어
+  저장할 대상이 없음. Settings 붙일 때 추가
 
 ### Phase 4 — 문서 마무리
-- [ ] `CLAUDE.md`/`AGENTS.md` File Map을 실제 구조로 갱신
-- [ ] Domain Rules에 추가: 템플릿 문구 VERBATIM 이식 원칙, PHI 필드 금지, 마취 최대 용량
+- [x] `CLAUDE.md`/`AGENTS.md` File Map을 실제 구조로 갱신
+- [x] Domain Rules에 추가: 템플릿 문구 VERBATIM 이식 원칙, PHI 필드 금지, 마취 최대 용량
       단일 소스(`medications.js`) 유지
 - [ ] Codex 리뷰 → 최종 확인
 
