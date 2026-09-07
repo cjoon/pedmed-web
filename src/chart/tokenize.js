@@ -41,6 +41,28 @@ export function tokenizeVersion(version) {
   };
 }
 
+// A Visit Note version: same S/O/A, but the plan is `steps` (not `P`) and two
+// extra free-form lines follow it. Kept as a separate function so the Chart
+// tab's shape assumptions stay untouched.
+export function tokenizeVisit(visit) {
+  const counter = { next: 0 };
+  return {
+    S: tokenizeText(visit.S ?? "", counter),
+    O: tokenizeText(visit.O ?? "", counter),
+    A: tokenizeText(visit.A ?? "", counter),
+    P: (visit.steps ?? []).map((step) => tokenizeText(step, counter)),
+    outcome: tokenizeText(visit.outcome ?? "", counter),
+    next: tokenizeText(visit.next ?? "", counter),
+  };
+}
+
 export function flattenTokens(tokens) {
-  return [...tokens.S, ...tokens.O, ...tokens.A, ...tokens.P.flat()];
+  return [
+    ...tokens.S,
+    ...tokens.O,
+    ...tokens.A,
+    ...tokens.P.flat(),
+    ...(tokens.outcome ?? []),
+    ...(tokens.next ?? []),
+  ];
 }

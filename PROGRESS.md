@@ -20,6 +20,7 @@ Stack: React 19 + Vite, plain CSS, no state library. Session-only patient data.
 | 2026-09-06 | `cc357dc` | Review/finalize steps, suture picker, Rx flow, S/O multi-select (details below) |
 | 2026-09-06 | `7ff2c15` | Endo O line split into clinical findings + AAE pulpal Dx + AAE periapical Dx |
 | 2026-09-06 | `44a8295` | Periodontal diagnosis: 2017 World Workshop (extent / stage / grade optional) and 1999 AAP |
+| 2026-09-06 | (pending) | Visit Note tab: per-visit templates ported verbatim from the prototype, a tab per visit, date, Outcome / Next appointment |
 
 ### What the last three commits added
 
@@ -43,6 +44,25 @@ Groups marked `single: true` (the diagnostic categories) behave as radio lists.
 modifiers that only apply to some diagnoses (periodontal stage and grade) do not
 print a `[ph]` placeholder. `MULTI_FIELDS` entries can carry `prefix`/`suffix`
 so a label such as `1999 AAP:` vanishes together with its value.
+
+**Visit Note tab (v1.1).** A third tab beside Initial Chart and Dosage, for the
+appointments after the workup: pick the procedure, pick the visit from a tab
+strip across the top of the card (`V1 — Preparation`, `V2 — Crown Delivery`, …),
+fill the blanks, copy. 25 procedures, 50 visits, all ported byte-identically
+from the prototype's `VN_TEMPLATES`; `scripts/check-data-parity.mjs` now checks
+them too. Each visit's S/O/A is one short line, the plan is the procedure steps,
+and the note closes with `Outcome:` and `Next:` — the prototype's
+`getVnPlainText` format, plus a CDT line.
+
+The `{ph}` blanks, tooth sync, anesthesia row, CDT chips and the fill → edit →
+final flow are all the existing Chart components. The Visit Note tab supplies a
+different dropdown vocabulary through a new `FieldOptionsContext`, matching the
+prototype's `Object.assign({}, ACTIVE_OPTIONS, VN extras)` — `{complaint}` in
+particular has a different list there.
+
+Date defaults to today, is computed from local time (not `toISOString()`, which
+rolls over a day early in Pacific Time), and is session-only like every other
+patient value.
 
 ### Awaiting CJ's clinical review
 
@@ -94,8 +114,25 @@ Same behavior applies to the Rx step, where an empty `Disp` currently prints
 - SRP's Assessment line is prototype text (`Generalized {stage} periodontitis.`)
   and now duplicates the periodontal diagnosis in O. A and P are never
   overridden by design, so changing this needs a decision first.
-- From PLAN.md: Visit Notes (v1.1), Settings with template editing and
-  export/import (v1.2), PWA (v2.0).
+- From PLAN.md: Settings with template editing and export/import (v1.2),
+  PWA (v2.0).
+- Visit Note S/O are still the prototype's fixed sentences. Giving them the same
+  "{+ph}" multi-select findings the Initial Chart got needs its own override
+  file and CJ's review of the vocabulary — deliberately not done in the port.
+- Visit Note step editing: the prototype let you drag steps to reorder, add and
+  delete them. Here the edit step's textarea covers that; revisit if reordering
+  turns out to matter chairside.
+- SSC Assessment line hardcodes `extensive caries` (`# {tooth} extensive
+  caries, indicated for SSC.`) — reads as an unwarranted, overly specific
+  diagnosis regardless of what O actually says. Needs to reference the actual
+  finding or drop the qualifier.
+- SSC crown size picker's options don't match how sizes are ordered/labeled in
+  practice — should just be `#1`–`#7`.
+- Dropdown blanks require clicking `Apply`; clicking outside the dropdown
+  (on blank space) should commit the current selection immediately, same as
+  `Apply`.
+- Fixed Pros (Crown/Bridge) Subjective/finding text defaults to
+  `asymptomatic` — should default to `endodontically treated` instead.
 
 ---
 

@@ -31,6 +31,16 @@ const htmlFactoryTemplates = extractLiteral(
   "const FACTORY_TEMPLATES=",
   "\n\n/* ===== STORAGE"
 );
+const htmlVnTemplates = extractLiteral(html, "const VN_TEMPLATES=", "\nconst VN_OPTIONS");
+// VN_OPTIONS is `Object.assign({}, ACTIVE_OPTIONS, { …extras… })`; only the
+// third argument (the extras) lives in visitOptions.js.
+const htmlVnExtraOptions = (() => {
+  const start = html.indexOf("const VN_OPTIONS=");
+  if (start === -1) throw new Error("marker not found: const VN_OPTIONS=");
+  const line = html.slice(start, html.indexOf("\n", start));
+  const literal = line.slice(line.indexOf("{complaint:"), line.lastIndexOf("})") + 1);
+  return new Function(`return (${literal});`)();
+})();
 
 const { OPTIONS } = await import(
   path.join(repoRoot, "src/chart/data/dropdownOptions.js")
@@ -42,6 +52,12 @@ const { FACTORY_TEMPLATES } = await import(
   path.join(repoRoot, "src/chart/data/initialTemplates.js")
 );
 const { TEMPLATES } = await import(path.join(repoRoot, "src/chart/data/templates.js"));
+const { VN_TEMPLATES } = await import(
+  path.join(repoRoot, "src/chart/data/visitTemplates.js")
+);
+const { VN_EXTRA_OPTIONS } = await import(
+  path.join(repoRoot, "src/chart/data/visitOptions.js")
+);
 
 let ok = true;
 function compare(name, expected, actual) {
@@ -58,6 +74,8 @@ function compare(name, expected, actual) {
 compare("OPTIONS", htmlOptions, OPTIONS);
 compare("PH_LABELS", htmlPhLabels, PH_LABELS);
 compare("FACTORY_TEMPLATES", htmlFactoryTemplates, FACTORY_TEMPLATES);
+compare("VN_TEMPLATES", htmlVnTemplates, VN_TEMPLATES);
+compare("VN_EXTRA_OPTIONS", htmlVnExtraOptions, VN_EXTRA_OPTIONS);
 
 // The rendered TEMPLATES may differ from the prototype in S and O only (that is
 // what src/chart/data/soOverrides.js exists for). Everything else — procedure

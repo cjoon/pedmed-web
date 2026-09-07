@@ -3,7 +3,7 @@ import FieldDropdown from "./FieldDropdown";
 import ToothSelector from "./ToothSelector";
 import SutureSelector from "./SutureSelector";
 import MultiSelectDropdown from "./MultiSelectDropdown";
-import { OPTIONS, PH_LABELS } from "./data/dropdownOptions";
+import { useFieldOptions } from "./FieldOptionsContext";
 import { MULTI_FIELDS } from "./data/soOptions";
 import { displayValue, isFilled } from "./fieldValue";
 
@@ -18,6 +18,7 @@ import { displayValue, isFilled } from "./fieldValue";
 export default function FieldToken({ id, ph, value, multi = false, optional = false, onSetField }) {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
+  const { options, labels } = useFieldOptions();
 
   function handleFocus(e) {
     if (e.target.matches(":focus-visible")) setOpen(true);
@@ -69,8 +70,8 @@ export default function FieldToken({ id, ph, value, multi = false, optional = fa
           <SutureSelector value={value} onApply={commit} onClose={close} anchorRef={anchorRef} />
         ) : (
           <FieldDropdown
-            label={PH_LABELS[ph] ?? ph}
-            options={OPTIONS[ph] ?? []}
+            label={labels[ph] ?? ph}
+            options={options[ph] ?? []}
             value={value}
             onSelect={commit}
             onClose={close}

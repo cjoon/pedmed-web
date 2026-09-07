@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import DosageCalculator from "./dosage/DosageCalculator";
 import ChartView from "./chart/ChartView";
+import VisitView from "./chart/VisitView";
 import "./App.css";
 
 const TABS = [
   { id: "chart", label: "Initial Chart", mobileLabel: "Chart" },
+  { id: "visit", label: "Visit Note", mobileLabel: "Visit" },
   { id: "dosage", label: "Dosage", mobileLabel: "Dosage" },
 ];
 
@@ -41,6 +43,9 @@ export default function App() {
       <div className="app-content">
         <div className={mode === "chart" ? "" : "hidden"}>
           <ChartView weightKg={weightKg} />
+        </div>
+        <div className={mode === "visit" ? "" : "hidden"}>
+          <VisitView weightKg={weightKg} />
         </div>
         <div className={mode === "dosage" ? "" : "hidden"}>
           <DosageCalculator onWeightKgChange={setWeightKg} />

@@ -1,6 +1,12 @@
-import { TEMPLATES } from "./data/templates";
+// Procedure list shared by the Chart and Visit Note tabs. `templates` decides
+// which set is listed; a procedure's sub-entries are `versions` on the Chart
+// tab and `visits` on the Visit Note tab, so the pill row reads whichever is
+// present. Every procedure has at least one, so the first is the default.
+function subEntries(item) {
+  return item.versions ?? item.visits ?? [];
+}
 
-export default function Sidebar({ search, onSearch, active, onSelect, className = "" }) {
+export default function Sidebar({ templates, search, onSearch, active, onSelect, className = "" }) {
   return (
     <aside className={`sidebar ${className}`.trim()}>
       <div className="search-wrap">
@@ -12,7 +18,7 @@ export default function Sidebar({ search, onSearch, active, onSelect, className 
         />
       </div>
       <nav className="proc-list">
-        {Object.entries(TEMPLATES).map(([catKey, cat]) => {
+        {Object.entries(templates).map(([catKey, cat]) => {
           const q = search.toLowerCase();
           const matches = Object.entries(cat.items).filter(
             ([, item]) => item.name.toLowerCase().includes(q) || item.tag.toLowerCase().includes(q)
@@ -23,18 +29,19 @@ export default function Sidebar({ search, onSearch, active, onSelect, className 
               <div className="cat-label">{cat.label}</div>
               {matches.map(([key, item]) => {
                 const isActive = active?.catKey === catKey && active?.key === key;
+                const entries = subEntries(item);
                 return (
                   <div key={key}>
                     <div
                       className={`proc-item${isActive ? " active" : ""}`}
-                      onClick={() => onSelect(catKey, key, item.versions[0].id)}
+                      onClick={() => onSelect(catKey, key, entries[0].id)}
                     >
                       <span>{item.name}</span>
                       <span className="tag">{item.tag}</span>
                     </div>
-                    {isActive && item.versions.length > 1 && (
+                    {isActive && entries.length > 1 && (
                       <div className="ver-list">
-                        {item.versions.map((ver) => (
+                        {entries.map((ver) => (
                           <span
                             key={ver.id}
                             className={`ver-pill${active.versionId === ver.id ? " active" : ""}`}

@@ -13,7 +13,7 @@ Pages: cjoon.github.io/pedcalc-web. See PLAN.md for the integration roadmap.
 
 ## File Map
 - src/main.jsx                    : entry point
-- src/App.jsx                     : shell — chart/dosage tab switch, shared
+- src/App.jsx                     : shell — chart/visit/dosage tab switch, shared
                                      weightKg, Topbar/MobileNav, footer disclaimer
 - src/App.css                     : shell styles + shared ChartRx palette tokens
 - src/medications.js              : drug database (name, mg/kg, max dose, formulations)
@@ -26,7 +26,11 @@ Pages: cjoon.github.io/pedcalc-web. See PLAN.md for the integration roadmap.
 - src/shared/DraftEditor.jsx      : free-text editing step, shared by Chart and Rx
 - src/shared/FinalOutput.jsx      : final read-only step with Copy (+ Print for Rx)
 - src/chart/ChartView.jsx         : Initial Chart tab — sidebar + card + fill/edit/final steps
-- src/chart/Sidebar.jsx           : procedure list, search filter, version pills
+- src/chart/VisitView.jsx         : Visit Note tab — same flow, per-visit templates + date
+- src/chart/VisitCard.jsx         : one visit — visit tab strip, date, S/O/A/steps, Outcome/Next
+- src/chart/cardReducer.js        : shared field/CDT/anesthesia state for both chart tabs
+- src/chart/FieldOptionsContext.js : which {ph} dropdown vocabulary a tab supplies
+- src/chart/Sidebar.jsx           : procedure list, search filter, version/visit pills
 - src/chart/ChartCard.jsx         : SOAP card, wires in anesthesia/CDT rows
 - src/chart/SoapRow.jsx           : one S/O/A/P row, renders field tokens
 - src/chart/FieldToken.jsx        : clickable {ph} blank, opens dropdown/tooth picker
@@ -40,7 +44,7 @@ Pages: cjoon.github.io/pedcalc-web. See PLAN.md for the integration roadmap.
 - src/chart/AnesthesiaRow.jsx     : carpule→mg calculator vs. weight-based max
 - src/chart/CdtRow.jsx            : CDT code chips, add/remove
 - src/chart/tokenize.js           : parses "{ph}" / "{+ph}" tokens out of template text
-- src/chart/serializer.js         : plain-text chart export format
+- src/chart/serializer.js         : plain-text chart + visit note export formats
 - src/chart/anesthesia.js         : carpule→mg / max-dose pure functions
 - src/chart/chart.css             : Chart-tab-only styles
 - src/chart/data/initialTemplates.js : FACTORY_TEMPLATES, verbatim from the prototype
@@ -49,6 +53,8 @@ Pages: cjoon.github.io/pedcalc-web. See PLAN.md for the integration roadmap.
 - src/chart/data/soOptions.js        : MULTI_FIELDS — S/O finding vocabulary (CJ reviews)
 - src/chart/data/sutureOptions.js    : suture sizes + materials (CJ-confirmed list)
 - src/chart/data/templates.js        : TEMPLATES = FACTORY_TEMPLATES + SO_OVERRIDES (what the UI renders)
+- src/chart/data/visitTemplates.js   : VN_TEMPLATES, verbatim from the prototype (25 procs, 50 visits)
+- src/chart/data/visitOptions.js     : VN_EXTRA_OPTIONS, verbatim — Visit-Note-only dropdown lists
 - src/chart/data/cdtCodes.js         : CDT code per procedure (UNKNOWN — empty until CJ provides)
 - src/chart/data/anesthetics.js      : anesthetic agent specs (only Lidocaine max confirmed)
 - scripts/check-data-parity.mjs      : chart data vs. dental-charting.html, exit 1 on mismatch
@@ -68,6 +74,10 @@ Pages: cjoon.github.io/pedcalc-web. See PLAN.md for the integration roadmap.
   src/chart/data/soOverrides.js (multi-select findings). initialTemplates.js and
   dropdownOptions.js stay byte-identical to the prototype, A/P are never
   overridden, and the parity script enforces both.
+- Visit Note data (visitTemplates.js, visitOptions.js) has NO override layer —
+  it is byte-identical to the prototype's VN_TEMPLATES / VN_OPTIONS extras and
+  must stay that way. Rewriting its S/O into "{+ph}" multi-selects needs its own
+  override file plus CJ's review of the vocabulary; do not edit these in place.
 - Prescription text (src/dosage/rx.js) never computes a dose. It formats the
   already-capped values from calculations.js, and never asserts a route it
   doesn't know (injectables default to a blank route, not "by mouth").

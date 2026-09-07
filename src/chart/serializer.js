@@ -31,3 +31,28 @@ export function getPlainChart({ procedureName, tokens, fieldValues, cdtCodes }) 
 
   return out.trim();
 }
+
+// Visit Note format, matching the prototype's getVnPlainText()
+// (dental-charting.html L1464): "Procedure — Visit" title + "=" underline,
+// a Date line, then S/O/A, the numbered-as-dashes step list, and the two
+// closing Outcome/Next lines. Empty steps drop out, as they do there.
+export function getPlainVisit({ procedureName, visitLabel, date, tokens, fieldValues, cdtCodes }) {
+  const title = `${procedureName} — ${visitLabel}`;
+  let out = `${title}\n${"=".repeat(title.length)}\nDate: ${date}\n\n`;
+
+  out += `S: ${renderParts(tokens.S, fieldValues)}\n\n`;
+  out += `O: ${renderParts(tokens.O, fieldValues)}\n\n`;
+  out += `A: ${renderParts(tokens.A, fieldValues)}\n\n`;
+
+  const steps = tokens.P.map((step) => renderParts(step, fieldValues)).filter((s) => s.trim());
+  out += `P:\n${steps.map((step) => `  - ${step}`).join("\n")}\n\n`;
+
+  if (cdtCodes.length) {
+    out += `CDT: ${cdtCodes.join(", ")}\n\n`;
+  }
+
+  out += `Outcome: ${renderParts(tokens.outcome, fieldValues)}\n`;
+  out += `Next: ${renderParts(tokens.next, fieldValues)}\n`;
+
+  return out.trim();
+}

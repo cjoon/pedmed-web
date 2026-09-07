@@ -47,7 +47,7 @@ SOAP 차팅 템플릿 기능을 합쳐 하나의 앱(ChartRx)으로 만든다.
 
 ### 네비게이션
 ```
-Desktop: Topbar 탭  [ Initial Chart ] [ Dosage ]     (Visit Notes는 v1.1)
+Desktop: Topbar 탭  [ Initial Chart ] [ Visit Note ] [ Dosage ]   (Visit Note = v1.1, 완료)
          Chart 모드에서만 좌측 Sidebar(290px) 렌더
 Mobile (≤700px): 하단 탭바 [ Chart ] [ Dosage ]
          Chart: procedure 패널(전체화면) ↔ 차트 뷰(전체화면, 뒤로가기)
@@ -192,7 +192,7 @@ CJ 요청 4건. 작업 브랜치 `feat/review-flow`.
 | 릴리스 | 범위 | 검증 |
 |---|---|---|
 | **MVP (이번)** | Initial Chart + Dosage 탭 + 모바일 반응형 | 2주 실사용, 차팅 시간 측정 |
-| v1.1 | Visit Notes(`VN_TEMPLATES`/`VN_OPTIONS`, FieldToken 재사용), Next appointment 구조화, 날짜+CDT 포함 복사, 하단 탭바 3개 | visit note 90초 이내 |
+| ~~v1.1~~ ✅ | Visit Notes(`VN_TEMPLATES`/`VN_OPTIONS`, FieldToken 재사용), 방문별 탭, Outcome/Next, 날짜+CDT 포함 복사, 하단 탭바 3개 | visit note 90초 이내 |
 | v1.2 | Settings(Templates/Options 편집, Export/Import JSON, Reset), `useChartData`/`storage.js` 연결 | 병원 커스텀 설정 완성 |
 | v2.0 | PWA(오프라인, 업데이트 배너). 배포는 GitHub Pages 유지 | 다기기 사용 |
 

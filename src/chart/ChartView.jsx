@@ -4,6 +4,7 @@ import { CDT_CODES } from "./data/cdtCodes";
 import { tokenizeVersion, flattenTokens } from "./tokenize";
 import { getPlainChart } from "./serializer";
 import { isFilled } from "./fieldValue";
+import { cardReducer, initialCard } from "./cardReducer";
 import Sidebar from "./Sidebar";
 import ChartCard from "./ChartCard";
 import DraftEditor from "../shared/DraftEditor";
@@ -15,35 +16,6 @@ function findVersion(catKey, key, versionId) {
   if (!item) return null;
   const version = item.versions.find((v) => v.id === versionId) ?? item.versions[0];
   return { item, version };
-}
-
-const initialCard = { fieldValues: {}, cdtCodes: [], anesthesia: { agentIdx: null, carpules: "" } };
-
-function cardReducer(state, action) {
-  switch (action.type) {
-    case "reset":
-      return { fieldValues: {}, cdtCodes: action.cdtCodes, anesthesia: { agentIdx: null, carpules: "" } };
-    case "setField": {
-      const next = { ...state.fieldValues, [action.id]: action.value };
-      // Tooth sync: filling one tooth token backfills every other *empty*
-      // tooth token, mirroring the prototype's setFieldValue (L705) — but
-      // never overwrites a tooth the user already set individually.
-      if (action.ph === "tooth") {
-        for (const otherId of action.toothIds) {
-          if (otherId !== action.id && !state.fieldValues[otherId]) next[otherId] = action.value;
-        }
-      }
-      return { ...state, fieldValues: next };
-    }
-    case "addCdt":
-      return state.cdtCodes.includes(action.code) ? state : { ...state, cdtCodes: [...state.cdtCodes, action.code] };
-    case "removeCdt":
-      return { ...state, cdtCodes: state.cdtCodes.filter((c) => c !== action.code) };
-    case "setAnesthesia":
-      return { ...state, anesthesia: { ...state.anesthesia, ...action.value } };
-    default:
-      return state;
-  }
 }
 
 export default function ChartView({ weightKg }) {
@@ -110,6 +82,7 @@ export default function ChartView({ weightKg }) {
   return (
     <div className="chart">
       <Sidebar
+        templates={TEMPLATES}
         search={search}
         onSearch={setSearch}
         active={active}
